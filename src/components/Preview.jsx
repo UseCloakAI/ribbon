@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react'
 import { EASE, EASE_IN } from '../lib/motion.js'
 import { useStore } from '../lib/store.js'
-import { PHONES, STATIONS, TRACKS, fmtTime } from '../data/media.js'
+import { PHONES, TRACKS, fmtTime } from '../data/media.js'
 import { AlbumArt, Bars } from '../apps/NowPlaying.jsx'
 import { useShared } from '../lib/shared.js'
 
@@ -13,7 +13,6 @@ function Widget({ id }) {
   const s = useStore((x) => x)
   const art = useShared('np-art')
   const title = useShared('np-title', { uniform: true })
-  const freq = useShared('radio-freq', { uniform: true })
   const t = TRACKS[s.track]
   switch (id) {
     case 'nowplaying':
@@ -32,17 +31,6 @@ function Widget({ id }) {
           </div>
         </div>
       )
-    case 'radio': {
-      const st = STATIONS.find((x) => Math.abs(x.freq - s.freq) < 0.05)
-      return (
-        <div className="pv-big">
-          <span ref={freq} className="pv-num">
-            {s.freq.toFixed(1)}
-          </span>
-          <small>FM {st ? st.name : ''}</small>
-        </div>
-      )
-    }
     case 'carplay':
     case 'phones':
       return (
@@ -106,9 +94,9 @@ function Widget({ id }) {
 }
 
 // The right side only carries live state for the selected item: the song,
-// the frequency, the phone. Names live on the ring, nothing is repeated.
+// the phone. Names live on the ring, nothing is repeated.
 // The right side only carries live state for the selected item: the song,
-// the frequency, the phone. Names live on the ring, nothing is repeated.
+// the phone. Names live on the ring, nothing is repeated.
 // It moves with the ring: turning down lifts the old state up and away.
 export default function Preview({ item, dir = 1, launching, entering }) {
   return (

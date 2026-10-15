@@ -1,5 +1,5 @@
 import {
-  MusicNotes, Radio, Books, Playlist,
+  MusicNotes, Books, Playlist,
   DeviceMobile, DeviceMobileSpeaker, Usb,
   Gauge, Path, Speedometer,
   GearSix, SunDim, SpeakerHigh, SlidersHorizontal, Info,
@@ -13,7 +13,6 @@ export const CATEGORIES = [
     icon: MusicNotes,
     items: [
       { id: 'nowplaying', label: 'Now Playing', sub: 'What’s on right now', icon: Playlist },
-      { id: 'radio', label: 'Radio', sub: 'FM tuner, six presets', icon: Radio },
       { id: 'library', label: 'Library', sub: 'Songs on this car', icon: Books },
     ],
   },

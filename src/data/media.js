@@ -9,15 +9,6 @@ export const TRACKS = [
   { title: 'The Marvelous Blood', artist: 'Tiffani Hutson', album: 'The Marvelous Blood', length: 525, hue: 350, src: M('the-wonderful-blood.mp3') },
 ]
 
-export const STATIONS = [
-  { freq: 88.5, name: 'KQED', genre: 'News and talk' },
-  { freq: 93.3, name: 'Wave 93', genre: 'Indie' },
-  { freq: 96.5, name: 'KOIT', genre: 'Soft rock' },
-  { freq: 101.9, name: 'Coast 102', genre: 'Classic hits' },
-  { freq: 104.3, name: 'Drive FM', genre: 'Alternative' },
-  { freq: 106.1, name: 'KMEL', genre: 'Hip hop' },
-]
-
 export const PHONES = [
   { name: 'Ari’s iPhone', model: 'iPhone 16 Pro', last: 'Today' },
   { name: 'Work phone', model: 'iPhone 15', last: '3 days ago' },
