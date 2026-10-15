@@ -1,13 +1,12 @@
-// Sample library for the prototype. Lengths in seconds.
+// The library. Audio and artwork live in public/music (kept out of git);
+// tracks without embedded artwork get a generated cover. Lengths in seconds.
+const M = (f) => `${import.meta.env.BASE_URL}music/${f}`
 export const TRACKS = [
-  { title: 'Low Tide Static', artist: 'Marlowe Kite', album: 'Coastline Radio', length: 221, hue: 198 },
-  { title: 'Overpass Glow', artist: 'Juno Ferraro', album: 'Night Lanes', length: 254, hue: 222 },
-  { title: 'Paper Satellites', artist: 'The Wren Sisters', album: 'Paper Satellites', length: 197, hue: 176 },
-  { title: 'Mile 88', artist: 'Odessa Vane', album: 'Mile Markers', length: 238, hue: 206 },
-  { title: 'Cold Front', artist: 'Halden Moss', album: 'Pressure Systems', length: 263, hue: 190 },
-  { title: 'Long Way Round', artist: 'Ines Okafor', album: 'Detour Songs', length: 212, hue: 214 },
-  { title: 'Signal Fade', artist: 'Marlowe Kite', album: 'Coastline Radio', length: 186, hue: 202 },
-  { title: 'Northbound', artist: 'Juno Ferraro', album: 'Night Lanes', length: 241, hue: 228 },
+  { title: 'You Saved Me', artist: 'UPPERROOM', album: 'You Saved Me', length: 281, hue: 206, src: M('you-saved-me.mp3') },
+  { title: 'Remember The Time', artist: 'Michael Jackson', album: 'Dangerous', length: 239, hue: 32, src: M('remember-the-time.mp3'), art: M('remember-the-time.png') },
+  { title: 'Give Me Jesus (Spontaneous)', artist: 'Bethel Music, Abbie Gamboa, Jenn Johnson', album: 'Live', length: 706, hue: 198, src: M('give-me-jesus.mp3') },
+  { title: "Thank God I'm Free", artist: 'Ray Ernandez, SOCAL WRSHP CO.', album: "Summer Camp '26", length: 311, hue: 40, src: M('thank-god-im-free.mp3'), art: M('thank-god-im-free.jpg') },
+  { title: 'The Wonderful Blood', artist: 'Tiffany Hudson', album: 'The Wonderful Blood', length: 525, hue: 350, src: M('the-wonderful-blood.mp3') },
 ]
 
 export const STATIONS = [

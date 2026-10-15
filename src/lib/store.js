@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from 'react'
-import { TRACKS } from '../data/media.js'
 import { bus } from './bus.js'
 
 const KEY = 'ribbon.settings.v1'
@@ -33,7 +32,7 @@ let state = {
   ...saved,
   track: 0,
   playing: true,
-  position: 47,
+  position: 0,
   freq: 101.9,
   carplay: 'idle', // idle | connecting | streaming | error
   toast: null,
@@ -79,18 +78,6 @@ export function toast(text) {
   setState({ toast: { text, id: Date.now() } })
   bus.emit('toast')
   toastTimer = setTimeout(() => setState({ toast: null }), 2200)
-}
-
-export function startMediaClock() {
-  setInterval(() => {
-    if (!state.playing) return
-    const t = TRACKS[state.track]
-    if (state.position + 1 >= t.length) {
-      setState({ track: (state.track + 1) % TRACKS.length, position: 0 })
-    } else {
-      setState({ position: state.position + 1 })
-    }
-  }, 1000)
 }
 
 export const clamp = (v, a, b) => Math.min(b, Math.max(a, v))

@@ -5,10 +5,10 @@ import '@fontsource-variable/geist'
 import '@fontsource-variable/geist-mono'
 import './styles.css'
 import App from './App.jsx'
-import { startMediaClock } from './lib/store.js'
+import { startPlayer } from './lib/player.js'
 import { wireSound } from './lib/sound.js'
 
-startMediaClock()
+startPlayer()
 wireSound()
 
 createRoot(document.getElementById('root')).render(

@@ -20,8 +20,9 @@ export function AlbumArt({ track, size = 236 }) {
         background: `radial-gradient(120% 90% at 25% 15%, hsl(${h} 85% 82%), hsl(${h} 62% 52%) 52%, hsl(${h + 24} 58% 28%))`,
       }}
     >
-      <span className="art-sheen" />
-      {size >= 120 && <span className="art-title">{track.album}</span>}
+      {track.art && <img className="art-img" src={track.art} alt="" />}
+      {!track.art && <span className="art-sheen" />}
+      {size >= 120 && !track.art && <span className="art-title">{track.title}</span>}
     </div>
   )
 }

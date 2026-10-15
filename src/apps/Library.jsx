@@ -47,10 +47,14 @@ export default function Library() {
       keyOf={(t) => t.title}
       render={(t, i) => (
         <div className="track-row">
-          <span
-            className="track-art"
-            style={{ background: `linear-gradient(140deg, hsl(${t.hue} 80% 78%), hsl(${t.hue + 20} 58% 36%))` }}
-          />
+          {t.art ? (
+            <img className="track-art" src={t.art} alt="" />
+          ) : (
+            <span
+              className="track-art"
+              style={{ background: `linear-gradient(140deg, hsl(${t.hue} 80% 78%), hsl(${t.hue + 20} 58% 36%))` }}
+            />
+          )}
           <span className="track-text">
             <b>{t.title}</b>
             <span>{t.artist}</span>

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { bus } from '../lib/bus.js'
 import { useStore } from '../lib/store.js'
 import { useReducedMotionPref } from '../lib/hooks.js'
+import { musicLevel } from '../lib/player.js'
 
 // Each ribbon is a bundle of thin strands whose spread is modulated by a
 // slow sine, so the sheet appears to twist and pinch like the XMB wave.
@@ -72,10 +73,13 @@ export default function Sky({ mode }) {
       const { mode, speed, strandScale } = cfg.current
       const night = mode === 'night'
       const rgb = night ? '168,212,255' : '255,255,255'
+      // the song breathes into the wave: a little more height and pace when
+      // it swells, settling back as it quietens
+      const music = speed ? musicLevel() : 0
       energy *= Math.exp(-dt * 2.2)
       push += energy * dt * 1.6
       flash *= Math.exp(-dt * 3)
-      t += dt * speed
+      t += dt * speed * (1 + music * 0.35)
 
       let reveal = 1
       const since = revealStart === null ? Infinity : (performance.now() - revealStart - 250) / 1000
@@ -95,7 +99,9 @@ export default function Sky({ mode }) {
       const maxX = W * reveal
 
       for (let ri = 0; ri < RIBBONS.length; ri++) {
-        const r = RIBBONS[ri]
+        const base = RIBBONS[ri]
+        const lift = 1 + music * 0.3
+        const r = { ...base, a1: base.a1 * lift, a2: base.a2 * lift, width: base.width * (1 + music * 0.2), alpha: base.alpha * (1 + music * 0.25) }
         for (let i = 0; i <= samples; i++) {
           const nx = i / samples
           const ph = t + push
@@ -158,7 +164,7 @@ export default function Sky({ mode }) {
     const loop = (now) => {
       const dt = Math.min(0.05, (now - last) / 1000)
       last = now
-      const idle = cfg.current.speed === 0 && Math.abs(energy) < 0.01 && flash < 0.01 && revealStart === null
+      const idle = (cfg.current.speed === 0 || document.hidden) && Math.abs(energy) < 0.01 && flash < 0.01 && revealStart === null
       if (!document.hidden && (!idle || dirty)) {
         draw(dt)
         dirty = false

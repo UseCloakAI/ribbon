@@ -2,3 +2,6 @@ node_modules
 dist
 .DS_Store
 *.log
+
+# songs and artwork stay local (copyrighted); drop them in public/music on the device
+public/music/
