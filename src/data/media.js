@@ -10,7 +10,7 @@ export const TRACKS = [
 ]
 
 export const PHONES = [
-  { name: 'Ari’s iPhone', model: 'iPhone 16 Pro', last: 'Today' },
+  { name: 'Paul’s iPhone', model: 'iPhone 16 Pro', last: 'Today' },
   { name: 'Work phone', model: 'iPhone 15', last: '3 days ago' },
   { name: 'Mara’s iPhone', model: 'iPhone 14', last: 'Sep 28' },
 ]
