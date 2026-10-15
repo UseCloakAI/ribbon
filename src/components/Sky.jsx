@@ -79,14 +79,14 @@ export default function Sky({ mode }) {
       // the song breathes into the wave: a little more height and pace when
       // it swells, settling back as it quietens
       const m = speed ? musicLevel() : { level: 0, beat: 0, low: 0, high: 0 }
-      bands[0] += (m.low - bands[0]) * Math.min(1, dt * 6)
-      bands[1] += (m.high - bands[1]) * Math.min(1, dt * 7)
+      bands[0] += (m.low - bands[0]) * Math.min(1, dt * 18)
+      bands[1] += (m.high - bands[1]) * Math.min(1, dt * 20)
       // ease toward the readings so hits swell rather than jump
       music += (m.level - music) * Math.min(1, dt * 6)
-      beat += (m.beat - beat) * Math.min(1, dt * 9)
+      beat += (m.beat - beat) * Math.min(1, dt * 25)
       // each bass hit pushes the wave forward and brightens it
-      energy += beat * dt * 5
-      flash += (beat * 0.6 - flash) * Math.min(1, dt * 8)
+      energy += beat * dt * 12
+      flash += (beat - flash) * Math.min(1, dt * 20)
       energy *= Math.exp(-dt * 2.2)
       push += energy * dt * 1.6
       flash *= Math.exp(-dt * 3)
@@ -114,8 +114,8 @@ export default function Sky({ mode }) {
         // the big wave rides the lows (and the kicks), the small one the mids and highs
         const b = bands[ri]
         const kick = ri === 0 ? beat : 0
-        const lift = 1 + b * 1.1 + kick * 0.35
-        const r = { ...base, a1: base.a1 * lift, a2: base.a2 * lift, width: base.width * (1 + b * 0.7 + kick * 0.3), alpha: Math.min(1, base.alpha * (1 + b * 0.9)) }
+        const lift = 1 + b * 1.8 + kick * 0.9
+        const r = { ...base, a1: base.a1 * lift, a2: base.a2 * lift, width: base.width * (1 + b * 1.2 + kick * 0.7), alpha: Math.min(1, base.alpha * (1 + b * 1.4 + kick * 0.8)) }
         for (let i = 0; i <= samples; i++) {
           const nx = i / samples
           const ph = t + push

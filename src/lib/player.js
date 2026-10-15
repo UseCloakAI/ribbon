@@ -19,7 +19,7 @@ function graph() {
   const src = ctx.createMediaElementSource(audio)
   analyser = ctx.createAnalyser()
   analyser.fftSize = 512
-  analyser.smoothingTimeConstant = 0.6
+  analyser.smoothingTimeConstant = 0.35
   bins = new Uint8Array(analyser.frequencyBinCount)
   src.connect(analyser).connect(ctx.destination)
   graph.ctx = ctx
@@ -52,9 +52,9 @@ export function musicLevel() {
   let bass = 0
   for (let i = 1; i < 6; i++) bass += bins[i]
   bass /= 5 * 255
-  if (bass > bassAvg * 1.18 && bass > 0.35) beat = Math.min(1, beat + (bass - bassAvg) * 4)
+  if (bass > bassAvg * 1.12 && bass > 0.3) beat = Math.min(1, beat + (bass - bassAvg) * 7)
   bassAvg += (bass - bassAvg) * 0.06
-  beat *= 0.9
+  beat *= 0.86
 
   // band energies: lows (bins 1-8, roughly under 700Hz at 44.1k/512)
   // and mids+highs (the rest of the audible spread)
@@ -65,8 +65,8 @@ export function musicLevel() {
   }
   const lt = Math.min(1, Math.max(0, (band(1, 8) - 0.25) / 0.5))
   const ht = Math.min(1, Math.max(0, (band(8, 120) - 0.08) / 0.35))
-  low += (lt - low) * (lt > low ? 0.1 : 0.04)
-  high += (ht - high) * (ht > high ? 0.12 : 0.05)
+  low += (lt - low) * (lt > low ? 0.45 : 0.12)
+  high += (ht - high) * (ht > high ? 0.5 : 0.15)
   return { level, beat, low, high }
 }
 
