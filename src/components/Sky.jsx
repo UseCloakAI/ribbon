@@ -42,6 +42,7 @@ export default function Sky({ mode }) {
     let dirty = true
     let music = 0
     let beat = 0
+    const bands = [0, 0] // [lows, mids+highs], eased
     const samples = 96
     const cy = new Float32Array(samples + 1)
     const hw = new Float32Array(samples + 1)
@@ -77,7 +78,9 @@ export default function Sky({ mode }) {
       const rgb = night ? '168,212,255' : '255,255,255'
       // the song breathes into the wave: a little more height and pace when
       // it swells, settling back as it quietens
-      const m = speed ? musicLevel() : { level: 0, beat: 0 }
+      const m = speed ? musicLevel() : { level: 0, beat: 0, low: 0, high: 0 }
+      bands[0] += (m.low - bands[0]) * Math.min(1, dt * 6)
+      bands[1] += (m.high - bands[1]) * Math.min(1, dt * 7)
       // ease toward the readings so hits swell rather than jump
       music += (m.level - music) * Math.min(1, dt * 6)
       beat += (m.beat - beat) * Math.min(1, dt * 9)
@@ -108,8 +111,11 @@ export default function Sky({ mode }) {
 
       for (let ri = 0; ri < RIBBONS.length; ri++) {
         const base = RIBBONS[ri]
-        const lift = 1 + music * 0.85 + beat * 0.35
-        const r = { ...base, a1: base.a1 * lift, a2: base.a2 * lift, width: base.width * (1 + music * 0.6 + beat * 0.3), alpha: Math.min(1, base.alpha * (1 + music * 0.7)) }
+        // the big wave rides the lows (and the kicks), the small one the mids and highs
+        const b = bands[ri]
+        const kick = ri === 0 ? beat : 0
+        const lift = 1 + b * 1.1 + kick * 0.35
+        const r = { ...base, a1: base.a1 * lift, a2: base.a2 * lift, width: base.width * (1 + b * 0.7 + kick * 0.3), alpha: Math.min(1, base.alpha * (1 + b * 0.9)) }
         for (let i = 0; i <= samples; i++) {
           const nx = i / samples
           const ph = t + push

@@ -27,6 +27,8 @@ function graph() {
 
 let bassAvg = 0
 let beat = 0
+let low = 0
+let high = 0
 
 // Two readings of the song for the wave:
 //   level: loudness envelope, quick to rise, eases back down
@@ -35,7 +37,9 @@ export function musicLevel() {
   if (!analyser || audio.paused) {
     level *= 0.95
     beat *= 0.85
-    return { level, beat }
+    low *= 0.95
+    high *= 0.95
+    return { level, beat, low, high }
   }
   analyser.getByteFrequencyData(bins)
   let sum = 0
@@ -51,7 +55,19 @@ export function musicLevel() {
   if (bass > bassAvg * 1.18 && bass > 0.35) beat = Math.min(1, beat + (bass - bassAvg) * 4)
   bassAvg += (bass - bassAvg) * 0.06
   beat *= 0.9
-  return { level, beat }
+
+  // band energies: lows (bins 1-8, roughly under 700Hz at 44.1k/512)
+  // and mids+highs (the rest of the audible spread)
+  const band = (a, b) => {
+    let e = 0
+    for (let i = a; i < b; i++) e += bins[i]
+    return e / ((b - a) * 255)
+  }
+  const lt = Math.min(1, Math.max(0, (band(1, 8) - 0.25) / 0.5))
+  const ht = Math.min(1, Math.max(0, (band(8, 120) - 0.08) / 0.35))
+  low += (lt - low) * (lt > low ? 0.1 : 0.04)
+  high += (ht - high) * (ht > high ? 0.12 : 0.05)
+  return { level, beat, low, high }
 }
 
 function tryPlay() {
