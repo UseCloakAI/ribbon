@@ -4,16 +4,24 @@ import { useStore } from './store.js'
 export const STAGE_W = 1024
 export const STAGE_H = 768
 
-// The UI is laid out on a fixed 1024x768 (iPad 2, 4:3) stage and scaled to
-// fit whatever panel it runs on; other ratios letterbox over the sky.
-export function useStageScale() {
-  const calc = () => Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H)
+// The stage is always 768 units tall. In 4:3 mode it is 1024 wide (the
+// iPad 2 panel) and letterboxes over the sky; in fit mode it widens to the
+// display's ratio (never narrower than 4:3) and right-anchored UI follows.
+export function useStage(aspect) {
+  const calc = () => {
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const width = aspect === 'fit' ? Math.max(STAGE_W, Math.round((STAGE_H * vw) / vh)) : STAGE_W
+    return { width, scale: Math.min(vw / width, vh / STAGE_H) }
+  }
   const [s, setS] = useState(calc)
   useEffect(() => {
     const on = () => setS(calc())
+    on()
     window.addEventListener('resize', on)
     return () => window.removeEventListener('resize', on)
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aspect])
   return s
 }
 

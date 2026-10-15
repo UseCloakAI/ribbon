@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
 
-export default function AppFrame({ crumb, title, children, wide }) {
+export default function AppFrame({ title, children, wide }) {
   return (
     <motion.section
       className={`app ${wide ? 'is-wide' : ''}`}
@@ -10,7 +10,6 @@ export default function AppFrame({ crumb, title, children, wide }) {
       transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1], delay: 0.06 }}
     >
       <header className="app-head">
-        <span className="app-crumb">{crumb}</span>
         <h2 className="app-title">{title}</h2>
       </header>
       <motion.div

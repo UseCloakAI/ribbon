@@ -6,6 +6,7 @@ const KEY = 'ribbon.settings.v1'
 const SETTINGS = {
   volume: 42,
   brightness: 92,
+  aspect: '4:3', // 4:3 | fit
   mode: 'day', // day | night | auto (follows the clock)
   wave: 'full', // full | calm | still
   sounds: true,

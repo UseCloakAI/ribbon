@@ -15,15 +15,16 @@ import { CATEGORIES, DEFAULT_CATEGORY } from './data/menu.js'
 import { AppCtx } from './lib/appContext.js'
 import { bus } from './lib/bus.js'
 import { useKnobInput } from './lib/useKnobInput.js'
-import { useMode, useStageScale } from './lib/hooks.js'
+import { useMode, useStage } from './lib/hooks.js'
 import { useStore } from './lib/store.js'
-import { C, KNOB_R, R_CAT, R_ITEM, STEP_CAT, STEP_ITEM } from './lib/geo.js'
+import { C, R_CAT, R_ITEM, STEP_CAT, STEP_ITEM } from './lib/geo.js'
 import { sfx } from './lib/sound.js'
 
 const LAUNCH_MS = 640
 
 export default function App() {
-  const scale = useStageScale()
+  const aspect = useStore((s) => s.aspect)
+  const { scale, width } = useStage(aspect)
   const mode = useMode()
   const brightness = useStore((s) => s.brightness)
   const bootKey = useStore((s) => s.bootKey)
@@ -130,8 +131,6 @@ export default function App() {
 
   const category = CATEGORIES[cat]
   const item = category.items[items[cat]]
-  const homeReadout =
-    layer === 'cats' ? { key: `c-${category.id}`, icon: category.icon } : { key: `i-${item.id}`, icon: item.icon }
   const AppView = app && !app.fullscreen ? APPS[app.id] : null
   const fullscreen = app?.fullscreen
   const hintContext = booting ? null : app ? 'app' : layer
@@ -139,8 +138,12 @@ export default function App() {
   return (
     <AppCtx.Provider value={ctx}>
       <div className="ribbon" data-mode={mode}>
-        <Sky mode={mode} />
-        <div className="stage" style={{ transform: `translate(-50%, -50%) scale(${scale})` }}>
+        {/* The frame is the stage's on-screen footprint: the whole display in
+            fit mode, a true 4:3 picture with bars around it in 4:3 mode. */}
+        <div className="frame" style={{ width: width * scale, height: 768 * scale }}>
+          <Sky mode={mode} />
+        </div>
+        <div className="stage" style={{ width, transform: `translate(-50%, -50%) scale(${scale})` }}>
           {!booting && (
             <>
               <AnimatePresence>{!fullscreen && <StatusBar key="status" entering={entering} />}</AnimatePresence>
@@ -161,14 +164,14 @@ export default function App() {
 
               <AnimatePresence>
                 {AppView && (
-                  <AppFrame key={app.id} crumb={CATEGORIES.find((c) => c.items.includes(app))?.label} title={app.label}>
+                  <AppFrame key={app.id} title={app.label}>
                     <AppView icon={app.icon} />
                   </AppFrame>
                 )}
               </AnimatePresence>
 
               <Knob
-                readout={app ? readout ?? { key: `a-${app.id}`, icon: app.icon } : homeReadout}
+                readout={app ? readout : null}
                 loading={!!launching}
                 hidden={fullscreen}
                 entering={entering}
@@ -193,11 +196,6 @@ function Home({ layer, cat, catDir, items, launching, entering }) {
   const category = CATEGORIES[cat]
   const item = category.items[items[cat]]
 
-  // One accent line points from the knob to whatever the knob is turning.
-  const reach =
-    layer === 'cats'
-      ? { x: KNOB_R + 14, width: R_CAT - KNOB_R - 56 }
-      : { x: R_CAT + 44, width: R_ITEM - R_CAT - 80 }
 
   return (
     <motion.div
@@ -220,13 +218,6 @@ function Home({ layer, cat, catDir, items, launching, entering }) {
         <span className={`track-ring ${layer === 'items' ? 'is-on' : ''}`} style={{ width: R_ITEM * 2, height: R_ITEM * 2 }} />
       </motion.div>
 
-      <motion.span
-        className={`reach ${launching ? 'is-launching' : ''}`}
-        style={{ top: C.y - 1 }}
-        initial={entering ? { ...reach, opacity: 0, scaleX: 0 } : reach}
-        animate={{ ...reach, opacity: 1, scaleX: 1 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30, delay: entering ? 0.7 : 0 }}
-      />
 
       <nav className={`orbit orbit-cats ${layer === 'items' ? 'is-parked' : ''}`} style={{ left: C.x, top: C.y }} aria-label="Categories">
         {CATEGORIES.map((c, i) => (
@@ -242,7 +233,7 @@ function Home({ layer, cat, catDir, items, launching, entering }) {
         </AnimatePresence>
       </div>
 
-      <Preview cat={category} item={item} layer={layer} entering={entering} />
+      <Preview item={item} launching={launching} entering={entering} />
     </motion.div>
   )
 }

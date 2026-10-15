@@ -3,21 +3,6 @@ import { useStore } from '../lib/store.js'
 import { PHONES, STATIONS, TRACKS, fmtTime } from '../data/media.js'
 import { AlbumArt, Bars } from '../apps/NowPlaying.jsx'
 
-const BLURB = {
-  nowplaying: 'Turn to pick a control, press to use it. Volume grabs the knob until you press again.',
-  radio: 'Each notch moves 0.1 MHz. Press to jump to the next preset.',
-  library: 'Every song on the card. Turn to browse, press to play.',
-  carplay: 'Hands this screen to your iPhone. The knob keeps working inside CarPlay.',
-  phones: 'The phone marked first connects when more than one is in the car.',
-  dongle: 'The USB adapter that speaks CarPlay to the iPhone.',
-  trip: 'Two trip meters plus distance since the last fill-up.',
-  gauges: 'Speed, engine, coolant and battery from the OBD-II port.',
-  display: 'Brightness, day or night theme, and how much the wave moves.',
-  sound: 'Volume, balance, tone, and the interface sounds.',
-  knob: 'Direction, wheel step size and on-screen key hints.',
-  about: 'Version, screen and input details. Replay the startup from here.',
-}
-
 function Widget({ id }) {
   const s = useStore((x) => x)
   const t = TRACKS[s.track]
@@ -107,42 +92,27 @@ function Widget({ id }) {
   }
 }
 
-export default function Preview({ cat, item, layer, entering }) {
+// The right side only carries live state for the selected item: the song,
+// the frequency, the phone. Names live on the ring, nothing is repeated.
+export default function Preview({ item, launching, entering }) {
   return (
     <motion.aside
-      className={`preview ${layer === 'items' ? 'is-live' : ''}`}
+      className="preview"
       initial={entering ? { opacity: 0, x: 40 } : false}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: entering ? 0.75 : 0 }}
+      animate={{ opacity: launching ? 0.4 : 1, x: 0 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: entering ? 0.8 : 0 }}
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={item.id}
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10, transition: { duration: 0.14, ease: [0.3, 0, 1, 1] } }}
+          exit={{ opacity: 0, y: -8, transition: { duration: 0.14, ease: [0.3, 0, 1, 1] } }}
           transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
-          className="preview-inner"
         >
-          <span className="preview-cat">{cat.label}</span>
-          <h2 className="preview-title">{item.label}</h2>
-          <p className="preview-blurb">{BLURB[item.id]}</p>
-          <div className="preview-widget">
-            <Widget id={item.id} />
-          </div>
+          <Widget id={item.id} />
         </motion.div>
       </AnimatePresence>
-      <p className="preview-cta">
-        {layer === 'items' ? (
-          <>
-            <kbd>enter</kbd> open {item.label}
-          </>
-        ) : (
-          <>
-            <kbd>enter</kbd> browse {cat.label}
-          </>
-        )}
-      </p>
     </motion.aside>
   )
 }

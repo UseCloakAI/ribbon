@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { bus } from '../lib/bus.js'
 import { useReducedMotionPref } from '../lib/hooks.js'
-import { sfx } from '../lib/sound.js'
+import { sfx, whenReady } from '../lib/sound.js'
 
 const WORD = 'ribbon'.split('')
 const STEPS = ['Waking the knob', 'Loading library', 'Looking for iPhone', 'Ready']
@@ -19,8 +19,8 @@ export default function Boot({ onDone }) {
     const k = reduced ? 0.4 : 1
     const timers = []
     const at = (ms, fn) => timers.push(setTimeout(fn, ms * k))
-    sfx('boot')
     let finished = false
+    whenReady('boot').then(() => !finished && sfx('boot'))
     let revealed = false
     const finish = () => {
       if (finished) return
@@ -50,6 +50,7 @@ export default function Boot({ onDone }) {
       finish()
     })
     return () => {
+      finished = true
       timers.forEach(clearTimeout)
       off()
     }

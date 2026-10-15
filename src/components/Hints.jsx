@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { useStore } from '../lib/store.js'
 
@@ -7,9 +8,18 @@ const SETS = {
   app: [['← →', 'turn'], ['enter', 'press'], ['esc', 'back'], ['hold esc', 'home']],
 }
 
-// On-screen legend for the keyboard stand-in. Hidden from Settings > Knob.
+// On-screen legend for the keyboard stand-in. It shows when the context
+// changes and fades after a few seconds, so the screen stays quiet.
+// Turned off entirely from Settings > Knob.
 export default function Hints({ context }) {
-  const show = useStore((s) => s.hints)
+  const enabled = useStore((s) => s.hints)
+  const [awake, setAwake] = useState(true)
+  useEffect(() => {
+    setAwake(true)
+    const t = setTimeout(() => setAwake(false), 4500)
+    return () => clearTimeout(t)
+  }, [context])
+  const show = enabled && awake
   const set = SETS[context]
   return (
     <AnimatePresence>

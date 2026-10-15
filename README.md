@@ -1,8 +1,8 @@
 # ribbon
 
-A knob-driven car launcher for Raspberry Pi 4. React + Vite, running full screen in Chromium. Light-sky look with a live wave. The knob is a large disc cut in half by the left edge of the screen, and every menu orbits it.
+A knob-driven car launcher for Raspberry Pi 4. React + Vite, running full screen in Chromium. Light-sky look with a live wave. A large plain circle sits cut in half by the left edge of the screen, and every menu flows around it.
 
-Stage is **1024 × 768** (4:3, the iPad 2 panel). It scales to fit any screen and letterboxes over the sky.
+Default screen is **4:3** (1024 × 768, the iPad 2 panel), shown as a true 4:3 picture with bars on wider displays. Settings › Display › Screen › **Fit display** widens the layout to the display's ratio instead (never narrower than 4:3); the right-hand content follows the right edge.
 
 ## Run
 
@@ -32,17 +32,19 @@ Two rings orbit the knob: categories on the inner ring, their items on the outer
 ## What's in the prototype
 
 - **Startup**: a thread of light draws across the dark, the sky comes up and the thread becomes the wave, wordmark rises, short load, hand-off to the knob as the orbits fan out.
-- **Launcher**: half-disc knob whose rim ticks turn with each notch, a fixed accent pointer at the selection slot, and one accent line reaching from the knob to whatever is selected. Press squashes it and rings out a ripple, ring ends rubber-band, and the rim fills as the launch loader. The visible half shows the current value. Wave surges with each turn.
+- **Launcher**: the circle stays still while the options flow around it. Selection is the item in the 3 o'clock slot, full ink and slightly larger. Press makes the circle breathe, ring ends rubber-band, the rim fills as the launch loader, and the circle shows a value only while you're adjusting one. The right side shows only live state (the song, the frequency, the phone). Key hints fade after a few seconds. Wave surges with each turn.
 - **Music**: Now Playing (controls + grabbed volume), Radio (0.1 MHz per notch, presets), Library (loading skeleton, then list).
 - **CarPlay**: Launch CarPlay (full screen, opens out of the knob, connection stages, error + retry), Phones, Adapter.
 - **Drive**: Trip (three meters, reset), Gauges (live demo signal).
-- **Settings**: Display (brightness, day / night / auto, wave Full / Calm / Still), Sound (volume, balance, tone, interface sounds), Knob (direction, wheel steps, hints), About (replay startup, reset).
+- **Settings**: Display (screen 4:3 / fit, brightness, day / night / auto, wave Full / Calm / Still), Sound (volume, balance, tone, interface sounds), Knob (direction, wheel steps, hints), About (replay startup, reset).
 
 Trip, gauge and library data are samples.
 
 ## Sound
 
-All sound is synthesized live with WebAudio (`src/lib/sound.js`), no audio files. Navigation is tiny and dry: a glassy tick per notch, a felt thud at the end of a ring, a rising fifth to step in and a falling one to step out. Values you grab with the knob play a tone whose pitch follows the value, and radio tuning breathes a little static between stations. The bigger moments get chords and a short reverb: startup (a Cmaj9 pad that swells with the sky, a chime as the wordmark lands, a low tone as the knob arrives), app launch (air rushing in while the rim fills, then a chord), and CarPlay connecting. Interface sounds and their volume live in Settings › Sound.
+All sound is synthesized (`src/lib/sound.js`), then pre-rendered once at startup through an `OfflineAudioContext` into stereo buffers, so playback is a single buffer per sound and costs almost nothing on a Pi. Voices are two-operator FM (glass bells, kalimba plucks), shaped noise, and a detuned saw pad, all through a stereo convolution room with early reflections and a damped tail. Each sound is peak-normalized to its own target, so the knob's constant companions sit quietest and the moments sit fullest.
+
+The palette lives in G major pentatonic. Navigation is close and dry: a glass tick per notch, a felt thock at a ring's end, a rising fifth to step in, falling to step out. Values you grab play a pluck pitched onto the scale by the value, so any sweep sounds musical; radio tuning breathes static between stations and rings when you land on one. Moments open into the room: startup (a Gmaj9 pad swelling with the sky, a chime as the wordmark lands, a low tone as the circle arrives), app launch (air rising while the rim fills, then a glass chord), CarPlay connecting. Interface sounds and their volume live in Settings › Sound.
 
 Browsers block audio until the first key press, so the startup sound only plays on a fresh load in kiosk mode (`scripts/kiosk.sh` passes `--autoplay-policy=no-user-gesture-required`). In dev, `__sfx('launch')` in the console plays any sound.
 

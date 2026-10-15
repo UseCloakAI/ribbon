@@ -53,7 +53,6 @@ export function CategoryNode({ cat, focus, layer, index, entering }) {
 export function ItemNode({ item, focus, layer, index, entering }) {
   const ink = useTransform(focus, (f) => 0.4 + 0.6 * f)
   const scale = useTransform(focus, (f) => 0.84 + 0.16 * f)
-  const sub = useTransform(focus, (f) => Math.max(0, f * 2 - 1))
   const Icon = item.icon
   return (
     <motion.div
@@ -66,12 +65,7 @@ export function ItemNode({ item, focus, layer, index, entering }) {
         <span className="item-icon">
           <Icon size={28} weight="light" />
         </span>
-        <div className="item-text">
-          <span className="item-label">{item.label}</span>
-          <motion.span className="item-sub" style={{ opacity: sub }}>
-            {item.sub}
-          </motion.span>
-        </div>
+        <span className="item-label">{item.label}</span>
       </motion.div>
     </motion.div>
   )

@@ -35,7 +35,7 @@ export default function Sky({ mode }) {
     const samples = 96
     const cy = new Float32Array(samples + 1)
     const hw = new Float32Array(samples + 1)
-    const sparks = Array.from({ length: 34 }, () => ({
+    const sparks = Array.from({ length: 16 }, () => ({
       x: Math.random(),
       y: 0.38 + Math.random() * 0.48,
       v: 0.004 + Math.random() * 0.012,
@@ -45,8 +45,9 @@ export default function Sky({ mode }) {
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
-      W = window.innerWidth
-      H = window.innerHeight
+      const box = el.parentElement.getBoundingClientRect()
+      W = Math.max(1, Math.round(box.width))
+      H = Math.max(1, Math.round(box.height))
       el.width = Math.round(W * dpr)
       el.height = Math.round(H * dpr)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -151,11 +152,12 @@ export default function Sky({ mode }) {
     }
 
     resize()
-    window.addEventListener('resize', resize)
+    const ro = new ResizeObserver(resize)
+    ro.observe(el.parentElement)
     raf = requestAnimationFrame(loop)
     return () => {
       cancelAnimationFrame(raf)
-      window.removeEventListener('resize', resize)
+      ro.disconnect()
       offKnob()
       offReveal()
     }

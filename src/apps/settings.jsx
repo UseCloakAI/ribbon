@@ -9,6 +9,7 @@ export function Display({ icon }) {
     <SettingsPanel
       icon={icon}
       rows={[
+        { key: 'aspect', label: 'Screen', type: 'choice', options: [['4:3', '4:3'], ['fit', 'Fit display']] },
         { key: 'brightness', label: 'Brightness', type: 'range', min: 10, max: 100, step: 5, unit: '%' },
         { key: 'mode', label: 'Theme', type: 'choice', options: [['auto', 'Auto'], ['day', 'Day'], ['night', 'Night']] },
         { key: 'wave', label: 'Wave', type: 'choice', options: [['full', 'Full'], ['calm', 'Calm'], ['still', 'Still']] },
@@ -67,7 +68,7 @@ export function About({ icon }) {
       icon={icon}
       rows={[
         { label: 'ribbon', type: 'info', value: `Version ${__APP_VERSION__}` },
-        { label: 'Screen', type: 'info', value: '1024 × 768' },
+        { label: 'Screen', type: 'info', value: (s) => (s.aspect === 'fit' ? 'Fits the display' : '4:3, 1024 × 768') },
         { label: 'Input', type: 'info', value: 'Keyboard, wheel, encoder' },
         { label: 'Replay startup', type: 'action', detail: 'Press', run: () => setState({ bootKey: getState().bootKey + 1 }) },
         {

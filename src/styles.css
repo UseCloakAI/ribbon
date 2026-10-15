@@ -21,10 +21,8 @@
   --line: rgba(12, 39, 64, 0.13);
   --track: rgba(255, 255, 255, 0.62);
   --shadow: 0 14px 30px -18px rgba(18, 78, 138, 0.4);
-  --disc-a: #fbfdff;
-  --disc-b: #e9f3fa;
-  --disc-edge: rgba(255, 255, 255, 0.9);
-  --disc-shadow: rgba(18, 78, 138, 0.45);
+  --disc: rgba(255, 255, 255, 0.5);
+  --disc-edge: rgba(255, 255, 255, 0.75);
   --acc: #f0662a;
 }
 
@@ -39,10 +37,8 @@
   --line: rgba(234, 244, 255, 0.16);
   --track: rgba(160, 210, 255, 0.22);
   --shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.6);
-  --disc-a: #163a63;
-  --disc-b: #0f2b4c;
-  --disc-edge: rgba(190, 225, 255, 0.14);
-  --disc-shadow: rgba(0, 0, 0, 0.6);
+  --disc: rgba(150, 200, 250, 0.08);
+  --disc-edge: rgba(190, 225, 255, 0.16);
   --acc: #ff8650;
 }
 
@@ -56,7 +52,7 @@ body,
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: #3d9bdc;
+  background: #02060d;
 }
 
 .ribbon {
@@ -127,11 +123,17 @@ kbd {
 }
 
 /* ---------- stage ---------- */
+.frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  overflow: hidden;
+}
 .stage {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 1024px;
   height: 768px;
   transform-origin: 50% 50%;
   overflow: hidden;
@@ -150,30 +152,13 @@ kbd {
   padding: 0 34px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   z-index: 6;
-}
-.wordmark {
-  font-size: 26px;
-  font-weight: 650;
-  letter-spacing: -0.04em;
 }
 .status-right {
   display: flex;
   align-items: center;
   gap: 18px;
-}
-.status-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--ink-2);
-  transition: color 0.3s;
-}
-.status-chip.is-on {
-  color: var(--ink);
 }
 .clock {
   display: grid;
@@ -182,8 +167,8 @@ kbd {
   margin-left: 6px;
 }
 .clock-time {
-  font-size: 32px;
-  font-weight: 600;
+  font-size: 30px;
+  font-weight: 500;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }
@@ -207,28 +192,16 @@ kbd {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(closest-side, var(--disc-a) 0 72%, var(--disc-b) 100%);
-  box-shadow: 0 0 0 1px var(--disc-edge), 26px 0 70px -30px var(--disc-shadow);
+  background: var(--disc);
+  box-shadow: inset 0 0 0 1px var(--disc-edge);
   transition: background 0.8s;
 }
-.knob-ticks {
+.knob-pulse {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: repeating-conic-gradient(from -0.4deg, var(--ink-3) 0 0.8deg, transparent 0.8deg 6deg);
-  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 22px), #000 calc(100% - 21px), #000 calc(100% - 12px), transparent calc(100% - 11px));
-  mask: radial-gradient(closest-side, transparent calc(100% - 22px), #000 calc(100% - 21px), #000 calc(100% - 12px), transparent calc(100% - 11px));
-  opacity: 0.55;
-}
-.knob-pointer {
-  position: absolute;
-  right: 9px;
-  top: 50%;
-  width: 16px;
-  height: 3px;
-  margin-top: -1.5px;
-  border-radius: 2px;
-  background: var(--acc);
+  border: 1px solid var(--disc-edge);
+  pointer-events: none;
 }
 .knob-load {
   position: absolute;
@@ -240,7 +213,7 @@ kbd {
 .knob-load path {
   fill: none;
   stroke: var(--acc);
-  stroke-width: 4;
+  stroke-width: 3;
   stroke-linecap: round;
 }
 .knob-face {
@@ -256,8 +229,8 @@ kbd {
   color: var(--ink);
 }
 .knob-value {
-  font-size: 34px;
-  font-weight: 600;
+  font-size: 36px;
+  font-weight: 500;
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -269,13 +242,6 @@ kbd {
   text-transform: uppercase;
   color: var(--ink-2);
   white-space: nowrap;
-}
-.knob-ripple {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1.5px solid var(--disc-a);
-  pointer-events: none;
 }
 
 /* ---------- orbits ---------- */
@@ -292,7 +258,7 @@ kbd {
   translate: -50% -50%;
   border-radius: 50%;
   border: 1px solid var(--track);
-  opacity: 0.35;
+  opacity: 0;
   transition: opacity 0.45s var(--out);
 }
 .track-ring.is-on {
@@ -321,24 +287,6 @@ kbd {
   opacity: 0.6;
 }
 
-.reach {
-  position: absolute;
-  left: 0;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--acc);
-  transform-origin: 0 50%;
-  z-index: 1;
-}
-.reach.is-launching {
-  animation: reach-pulse 0.62s var(--out);
-}
-@keyframes reach-pulse {
-  50% {
-    scale: 1 2.5;
-  }
-}
-
 .cat {
   position: absolute;
   width: 72px;
@@ -358,7 +306,7 @@ kbd {
   translate: -50% 0;
   margin-top: 2px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
@@ -384,72 +332,31 @@ kbd {
   place-items: center;
   color: var(--ink);
 }
-.item-text {
-  display: grid;
-  gap: 3px;
-}
 .item-label {
   font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  white-space: nowrap;
-}
-.item-sub {
-  font-size: 13.5px;
   font-weight: 500;
-  color: var(--ink-2);
+  letter-spacing: -0.025em;
   white-space: nowrap;
 }
 
 /* ---------- preview ---------- */
 .preview {
   position: absolute;
-  left: 712px;
-  top: 132px;
-  width: 282px;
-  bottom: 84px;
+  right: 36px;
+  top: 0;
+  bottom: 0;
+  width: 260px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   z-index: 3;
 }
-.preview-inner {
-  display: flex;
-  flex-direction: column;
-}
-.preview-cat {
-  font-size: 12.5px;
-  font-weight: 650;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-.preview-title {
-  margin: 8px 0 12px;
-  font-size: 38px;
-  font-weight: 600;
-  line-height: 1.04;
-  letter-spacing: -0.04em;
-}
-.preview-blurb {
-  font-size: 15.5px;
-  line-height: 1.5;
-  color: var(--ink-2);
-}
-.preview-widget {
-  margin-top: 26px;
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
-}
-.preview-cta {
-  margin-top: auto;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ink-2);
+.preview > div {
+  width: 100%;
 }
 .pv-big {
   display: grid;
   font-size: 44px;
-  font-weight: 650;
+  font-weight: 500;
   letter-spacing: -0.04em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -535,7 +442,7 @@ kbd {
 .app {
   position: absolute;
   left: 250px;
-  top: 92px;
+  top: 64px;
   right: 30px;
   bottom: 70px;
   display: flex;
@@ -545,17 +452,9 @@ kbd {
 .app-head {
   margin-bottom: 22px;
 }
-.app-crumb {
-  font-size: 12.5px;
-  font-weight: 650;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
 .app-title {
-  margin-top: 6px;
-  font-size: 40px;
-  font-weight: 650;
+  font-size: 36px;
+  font-weight: 500;
   letter-spacing: -0.04em;
   line-height: 1;
 }
@@ -586,16 +485,6 @@ kbd {
   top: 0;
   border-radius: 18px;
   background: var(--glass-hi);
-}
-.klist-focus::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 22%;
-  bottom: 22%;
-  width: 3px;
-  border-radius: 2px;
-  background: var(--acc);
 }
 .krow {
   position: relative;
@@ -1505,8 +1394,8 @@ kbd {
   .skel,
   .cp-pulse > span,
   .cp-orb,
-  .reach.is-launching {
-    animation: none;
+  .knob-pulse {
+    display: none;
   }
   .cp-pulse > span:first-child {
     opacity: 0.4;
