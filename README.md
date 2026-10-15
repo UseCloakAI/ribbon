@@ -35,10 +35,10 @@ Two rings orbit the knob: categories on the inner ring, their items on the outer
 - **Launcher**: the circle stays still while the options flow around it. Selection is the item in the 3 o'clock slot, full ink and slightly larger. Press makes the circle breathe, ring ends rubber-band, the rim fills as the launch loader, and the circle shows a value only while you're adjusting one. The right side shows only live state (the song, the frequency, the phone). Key hints fade after a few seconds. Wave surges with each turn. At startup each line of the wave sweeps in on its own delay and speed.
 - **Music**: Now Playing (controls, grabbed volume, scrub), Library (loading skeleton, then list).
 - **CarPlay**: a single category; pressing it launches CarPlay full screen (grows out of the circle, connection stages, error + retry).
-- **Drive**: Trip (three meters, reset), Gauges (live demo signal).
+- **Video**: one item per video; pressing opens an mp4 player (play/pause, scrub, volume, full screen) driven by the knob. Controls float over the picture and fade while playing. Videos live in `public/video` (mp4, optional WebM fallback, poster) and are listed in `src/data/videos.js`; the two included clips are generated samples.
 - **Settings**: Display (screen 4:3 / fit, brightness, day / night / auto, wave Full / Calm / Still), Sound (volume, balance, tone, interface sounds), Knob (direction, wheel steps, hints), About (replay startup, reset).
 
-Trip, gauge and library data are samples.
+
 
 ## Motion
 

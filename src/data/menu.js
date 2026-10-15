@@ -1,9 +1,10 @@
 import {
   MusicNotes, Books, Playlist,
   DeviceMobile,
-  Gauge, Path, Speedometer,
+  FilmStrip, MonitorPlay,
   GearSix, SunDim, SpeakerHigh, SlidersHorizontal, Info,
 } from '@phosphor-icons/react'
+import { VIDEOS } from './videos.js'
 
 // The two orbits: categories ride the inner ring, their items the outer ring.
 export const CATEGORIES = [
@@ -25,13 +26,10 @@ export const CATEGORIES = [
     app: { id: 'carplay', label: 'CarPlay', sub: 'Your iPhone on this screen', icon: DeviceMobile, fullscreen: true },
   },
   {
-    id: 'drive',
-    label: 'Drive',
-    icon: Gauge,
-    items: [
-      { id: 'trip', label: 'Trip', sub: 'Distance, time, economy', icon: Path },
-      { id: 'gauges', label: 'Gauges', sub: 'Live engine readouts', icon: Speedometer },
-    ],
+    id: 'video',
+    label: 'Video',
+    icon: FilmStrip,
+    items: VIDEOS.map((v) => ({ id: `video-${v.id}`, label: v.title, icon: MonitorPlay, app: 'video', video: v.id })),
   },
   {
     id: 'settings',

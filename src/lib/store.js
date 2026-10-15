@@ -33,7 +33,8 @@ let state = {
   track: 0,
   playing: true,
   position: 0,
-  carplay: 'idle', // idle | connecting | streaming | error
+  carplay: 'idle',
+  videoFull: false, // idle | connecting | streaming | error
   toast: null,
   bootKey: 0,
 }

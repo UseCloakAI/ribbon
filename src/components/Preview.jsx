@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { EASE, EASE_IN } from '../lib/motion.js'
 import { useStore } from '../lib/store.js'
 import { PHONES, TRACKS, fmtTime } from '../data/media.js'
+import { VIDEOS } from '../data/videos.js'
 import { AlbumArt, Bars } from '../apps/NowPlaying.jsx'
 import { useShared } from '../lib/shared.js'
 import Shared from './Shared.jsx'
@@ -39,20 +40,6 @@ function Widget({ id }) {
           <small>{s.dongle ? 'Adapter ready' : 'Adapter not found'}</small>
         </div>
       )
-    case 'trip':
-      return (
-        <div className="pv-big">
-          <Shared id="trip-km">128.4</Shared>
-          <small>km on Trip A</small>
-        </div>
-      )
-    case 'gauges':
-      return (
-        <div className="pv-big">
-          <Shared id="gauge-speed">64</Shared>
-          <small>km/h, demo signal</small>
-        </div>
-      )
     case 'display':
       return (
         <div className="pv-big">
@@ -84,6 +71,18 @@ function Widget({ id }) {
         </div>
       )
     default:
+      if (id.startsWith('video-')) {
+        const v = VIDEOS.find((x) => `video-${x.id}` === id)
+        return (
+          <div className="pv-video">
+            <Shared id={`video-frame-${v.id}`} uniform={false} className="pv-video-frame">
+              <img src={v.poster} alt="" />
+            </Shared>
+            <b>{v.title}</b>
+            <span>{fmtTime(v.length)}</span>
+          </div>
+        )
+      }
       return null
   }
 }

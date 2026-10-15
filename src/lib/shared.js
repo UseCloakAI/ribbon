@@ -62,6 +62,12 @@ function pin(src, dst) {
 
 function makeGhost(src, stage, rect, sr, k) {
   const g = src.cloneNode(true)
+  // a cloned <video> must stay a still picture, never a second player
+  for (const v of [g, ...g.querySelectorAll('video')].filter((n) => n.tagName === 'VIDEO')) {
+    v.removeAttribute('autoplay')
+    v.removeAttribute('src')
+    v.muted = true
+  }
   pin(src, g)
   if (shape(src) !== src) pin(shape(src), shape(g))
   g.classList.add('shared-ghost')

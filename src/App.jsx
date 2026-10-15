@@ -30,6 +30,7 @@ export default function App() {
   const mode = useMode()
   const brightness = useStore((s) => s.brightness)
   const bootKey = useStore((s) => s.bootKey)
+  const videoFull = useStore((s) => s.videoFull)
 
   const [booting, setBooting] = useState(true)
   const [entering, setEntering] = useState(true)
@@ -138,7 +139,7 @@ export default function App() {
   )
 
   const category = CATEGORIES[cat]
-  const AppView = app && !app.fullscreen ? APPS[app.id] : null
+  const AppView = app && !app.fullscreen ? APPS[app.app ?? app.id] : null
   const fullscreen = app?.fullscreen
   const hintContext = booting ? null : app ? 'app' : layer
 
@@ -155,7 +156,7 @@ export default function App() {
         <div className="stage" style={{ width, transform: `translate(-50%, -50%) scale(${scale})` }}>
           {!booting && (
             <>
-              <AnimatePresence>{!fullscreen && <StatusBar key="status" entering={entering} />}</AnimatePresence>
+              <AnimatePresence>{!fullscreen && !videoFull && <StatusBar key="status" entering={entering} />}</AnimatePresence>
 
               <AnimatePresence>
                 {!app && (
@@ -175,7 +176,7 @@ export default function App() {
               <AnimatePresence>
                 {AppView && (
                   <AppFrame key={app.id} id={app.id} title={app.label}>
-                    <AppView icon={app.icon} />
+                    <AppView icon={app.icon} item={app} />
                   </AppFrame>
                 )}
               </AnimatePresence>
@@ -183,13 +184,13 @@ export default function App() {
               <Knob
                 readout={app ? readout : null}
                 loading={!!launching}
-                hidden={fullscreen}
+                hidden={fullscreen || videoFull}
                 entering={entering}
               />
 
               <AnimatePresence>{fullscreen && <CarPlay key="carplay" />}</AnimatePresence>
 
-              <Hints context={fullscreen ? null : hintContext} />
+              <Hints context={fullscreen || videoFull ? null : hintContext} />
               <Toast />
             </>
           )}

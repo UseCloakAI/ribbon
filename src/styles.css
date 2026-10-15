@@ -1395,3 +1395,109 @@ img.track-art {
   flex: none;
   line-height: 0;
 }
+
+/* ---------- video player ---------- */
+.vp {
+  height: 100%;
+  display: grid;
+  place-items: start center;
+}
+.vp-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #05080d;
+  box-shadow: 0 30px 50px -24px rgba(8, 44, 92, 0.6);
+}
+/* the stage is transformed, so fixed means "fill the stage" */
+.vp-frame.is-full {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  aspect-ratio: auto;
+  border-radius: 0;
+  z-index: 25;
+}
+.vp-frame video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.vp-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 40px 22px 14px;
+  background: linear-gradient(transparent, rgba(2, 8, 18, 0.72));
+  color: #f4f9ff;
+  --ink: #f4f9ff;
+  --line: rgba(255, 255, 255, 0.25);
+}
+.vp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+.vp-time {
+  min-width: 52px;
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: rgba(244, 249, 255, 0.8);
+}
+.vp-time:last-child {
+  text-align: right;
+}
+.vp-controls {
+  position: relative;
+  display: flex;
+  gap: 10px;
+}
+.vp-ctl {
+  width: 52px;
+  height: 52px;
+  color: #f4f9ff;
+  background: transparent;
+  border: 0;
+}
+.vp-controls .ctl-ring {
+  left: -4px;
+  top: -4px;
+  width: 60px;
+  height: 60px;
+  border-color: #f4f9ff;
+}
+.pv-video {
+  display: grid;
+  gap: 4px;
+}
+.pv-video-frame {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  box-shadow: 0 14px 26px -16px rgba(8, 44, 92, 0.6);
+}
+.pv-video-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.pv-video b {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.pv-video span:last-child {
+  font-size: 14px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
