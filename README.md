@@ -63,7 +63,7 @@ music/
     info.json                      { "artist", "album", "order", "hue" } (optional)
 ```
 
-Any other audio file in a folder (mp3, m4a, wav, ogg, opus, flac) becomes a toggleable stem named after the file. Stems play locked in sync with the main mix and start off; in Now Playing, turn past Scrub to reach the switches (Mix plus one per stem) and press to fade a part in or out. Turning Mix off plays only the stems. Lengths are read from the files at startup. Add or remove files and rebuild (the dev server picks them up live).
+Any other audio file in a folder (mp3, m4a, wav, ogg, opus, flac) becomes a toggleable stem named after the file. Stems play locked in sync with the main mix. In Now Playing, the Stems control (shown only for songs with stems) opens a drop-down of Mix plus each stem: turn to move, press to toggle, back to close. Mix and stems are exclusive: picking a stem turns Mix off (other stems keep their state), picking Mix turns all stems off, and turning off the last stem brings Mix back. Lengths are read from the files at startup. Add or remove files and rebuild (the dev server picks them up live).
 
 ## Sound
 

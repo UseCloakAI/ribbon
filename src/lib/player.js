@@ -51,12 +51,23 @@ export function stemOn(state, track, name) {
 }
 export const MIX = '__mix'
 
+// Mix and stems are exclusive: picking a stem turns the mix off (other
+// stems keep their state); picking the mix turns every stem off; turning
+// off the last stem brings the mix back so the song never goes silent.
 export function toggleStem(track, name) {
   const s = getState()
-  const k = stemKey(track)
-  const cur = { ...(s.stemsOn?.[k] ?? {}) }
-  cur[name] = !stemOn(s, track, name)
-  setState({ stemsOn: { ...(s.stemsOn ?? {}), [k]: cur } })
+  const names = (track.stems ?? []).map((x) => x.name)
+  const cur = {}
+  for (const n of [MIX, ...names]) cur[n] = stemOn(s, track, n)
+  if (name === MIX) {
+    cur[MIX] = true
+    for (const n of names) cur[n] = false
+  } else {
+    cur[name] = !cur[name]
+    cur[MIX] = false
+    if (!names.some((n) => cur[n])) cur[MIX] = true
+  }
+  setState({ stemsOn: { ...(s.stemsOn ?? {}), [stemKey(track)]: cur } })
   return cur[name]
 }
 

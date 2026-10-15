@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Pause, Play, SkipBack, SkipForward, SpeakerHigh, Waveform } from '@phosphor-icons/react'
+import { Check, Pause, Play, SkipBack, SkipForward, SpeakerHigh, Stack, Waveform } from '@phosphor-icons/react'
 import { useAppKnob, useReadout } from '../lib/appContext.js'
 import { bus } from '../lib/bus.js'
 import { clamp, getState, setState, useStore } from '../lib/store.js'
@@ -39,6 +39,10 @@ export function Bars({ playing, count = 5 }) {
   )
 }
 
+// control size and spacing (also in styles.css .np-controls)
+const CTL = 64
+const STEP = 72
+
 export default function NowPlaying({ icon }) {
   const trackIdx = useStore((s) => s.track)
   const playing = useStore((s) => s.playing)
@@ -59,18 +63,20 @@ export default function NowPlaying({ icon }) {
     { id: 'next', icon: SkipForward, label: 'Next' },
     { id: 'volume', icon: SpeakerHigh, label: 'Volume' },
     { id: 'scrub', icon: Waveform, label: 'Scrub' },
+    ...(track.stems?.length ? [{ id: 'stems', icon: Stack, label: 'Stems' }] : []),
   ]
   const shown = adjust === 'scrub' ? scrubT : position
   const len = track.length || 1
 
-  // Stems: one switch per stem file in the song's folder, plus the main mix.
-  // The knob carries on from the controls into this row.
+  // Stems: the Stems control opens a drop-down of the main mix plus one
+  // entry per stem file in the song's folder. Turn to move, press to pick,
+  // back to close.
   const stemsOn = useStore((s) => s.stemsOn)
   const stemNames = track.stems?.length ? [MIX, ...track.stems.map((x) => x.name)] : []
-  const total = controls.length + stemNames.length
+  const [menu, setMenu] = useState(false)
+  const [menuIdx, setMenuIdx] = useState(0)
+  const total = controls.length
   const f = Math.min(focus, total - 1)
-  const inStems = f >= controls.length
-  const stemFocus = f - controls.length
   const isOn = (name) => stemOn({ stemsOn }, track, name)
   const stemLabel = (name) => (name === MIX ? 'Mix' : name)
 
@@ -82,8 +88,8 @@ export default function NowPlaying({ icon }) {
   }
 
   useReadout(
-    inStems && !adjust
-      ? { key: `stem-${stemNames[stemFocus]}`, value: isOn(stemNames[stemFocus]) ? 'On' : 'Off', unit: stemLabel(stemNames[stemFocus]) }
+    menu && stemNames[menuIdx]
+      ? { key: `stem-${stemNames[menuIdx]}`, value: isOn(stemNames[menuIdx]) ? 'On' : 'Off', unit: stemLabel(stemNames[menuIdx]) }
       : adjust === 'volume'
       ? { key: 'vol', value: volume, unit: 'volume' }
       : adjust === 'scrub'
@@ -99,6 +105,26 @@ export default function NowPlaying({ icon }) {
   }
 
   useAppKnob((e) => {
+    if (menu) {
+      if (e.type === 'turn') {
+        const n = menuIdx + e.dir
+        if (n < 0 || n >= stemNames.length) bus.emit('bump', e.dir)
+        else setMenuIdx(n)
+        return true
+      }
+      if (e.type === 'press') {
+        const on = toggleStem(track, stemNames[menuIdx])
+        sfx(on ? 'toggleOn' : 'toggleOff')
+        return true
+      }
+      if (e.type === 'back') {
+        sfx('release')
+        setMenu(false)
+        return true
+      }
+      setMenu(false)
+      return false
+    }
     if (adjust === 'scrub') {
       if (e.type === 'turn') {
         // quick turns cover more ground: 2s per notch, up to 8s when spinning
@@ -141,18 +167,18 @@ export default function NowPlaying({ icon }) {
       else setFocus(n)
       return true
     }
-    if (e.type === 'press' && inStems) {
-      const on = toggleStem(track, stemNames[stemFocus])
-      sfx(on ? 'toggleOn' : 'toggleOff')
-      return true
-    }
+
     if (e.type === 'press') {
       const id = controls[f].id
-      sfx(id === 'volume' || id === 'scrub' ? 'grab' : id === 'play' ? (getState().playing ? 'toggleOff' : 'toggleOn') : 'select')
+      sfx(id === 'volume' || id === 'scrub' || id === 'stems' ? 'grab' : id === 'play' ? (getState().playing ? 'toggleOff' : 'toggleOn') : 'select')
       if (id === 'prev') skip(-1)
       if (id === 'next') skip(1)
       if (id === 'play') setState({ playing: !getState().playing })
       if (id === 'volume') setAdjust('volume')
+      if (id === 'stems') {
+        setMenuIdx(0)
+        setMenu(true)
+      }
       if (id === 'scrub') {
         setScrubT(getState().position)
         setScrubbing(true)
@@ -217,35 +243,47 @@ export default function NowPlaying({ icon }) {
         </div>
         <div className="np-controls">
           <motion.span
-            className={`ctl-ring ${adjust ? 'is-grabbed' : ''}`}
-            animate={{ x: Math.min(f, controls.length - 1) * 86, opacity: inStems ? 0 : 1, scale: inStems ? 0.8 : 1 }}
+            className={`ctl-ring ${adjust || menu ? 'is-grabbed' : ''}`}
+            animate={{ x: f * STEP }}
             transition={{ type: 'spring', stiffness: 420, damping: 32 }}
           />
           {controls.map((c, i) => (
             <div key={c.id} className={`ctl ${i === f ? 'is-focus' : ''} ${c.id === 'play' ? 'is-primary' : ''} ${i === f && adjust ? 'is-grabbed' : ''}`}>
-              <c.icon size={c.id === 'play' ? 34 : 26} weight="fill" aria-label={c.label} />
+              <c.icon size={c.id === 'play' ? 30 : 24} weight="fill" aria-label={c.label} />
               {c.id === 'volume' && <span className="ctl-vol">{volume}</span>}
             </div>
           ))}
-        </div>
-        {stemNames.length > 0 && (
-          <div className="stems" aria-label="Stems">
-            {stemNames.map((name, i) => (
+          <AnimatePresence>
+            {menu && (
               <motion.div
-                key={`${track.id}-${name}`}
-                className={`stem ${isOn(name) ? 'is-on' : ''} ${inStems && i === stemFocus ? 'is-focus' : ''}`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, ease: EASE, delay: i * 0.035 }}
+                className="stem-menu"
+                style={{ left: controls.findIndex((c) => c.id === 'stems') * STEP + CTL - 200, transformOrigin: '100% 0' }}
+                initial={{ opacity: 0, scale: 0.9, y: -6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -4, transition: { duration: 0.15, ease: EASE_IN } }}
+                transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+                role="menu"
+                aria-label="Stems"
               >
-                <span className="stem-dot">
-                  <motion.span animate={{ scale: isOn(name) ? 1 : 0 }} transition={{ type: 'spring', stiffness: 500, damping: 26 }} />
-                </span>
-                {stemLabel(name)}
+                <motion.span
+                  className="stem-menu-focus"
+                  animate={{ y: menuIdx * 44 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 36 }}
+                />
+                {stemNames.map((name) => (
+                  <div key={`${track.id}-${name}`} className={`stem-row ${isOn(name) ? 'is-on' : ''}`} role="menuitemcheckbox" aria-checked={isOn(name)}>
+                    <span className="stem-check">
+                      <motion.span animate={{ scale: isOn(name) ? 1 : 0 }} transition={{ type: 'spring', stiffness: 500, damping: 26 }}>
+                        <Check size={14} weight="bold" />
+                      </motion.span>
+                    </span>
+                    {stemLabel(name)}
+                  </div>
+                ))}
               </motion.div>
-            ))}
-          </div>
-        )}
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   )
