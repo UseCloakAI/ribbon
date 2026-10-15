@@ -2,11 +2,11 @@
 // tracks without embedded artwork get a generated cover. Lengths in seconds.
 const M = (f) => `${import.meta.env.BASE_URL}music/${f}`
 export const TRACKS = [
-  { title: 'You Saved Me', artist: 'UPPERROOM', album: 'You Saved Me', length: 281, hue: 206, src: M('you-saved-me.mp3') },
-  { title: 'Remember The Time', artist: 'Michael Jackson', album: 'Dangerous', length: 239, hue: 32, src: M('remember-the-time.mp3'), art: M('remember-the-time.png') },
-  { title: 'Give Me Jesus (Spontaneous)', artist: 'Bethel Music, Abbie Gamboa, Jenn Johnson', album: 'Live', length: 706, hue: 198, src: M('give-me-jesus.mp3') },
-  { title: "Thank God I'm Free", artist: 'Ray Ernandez, SOCAL WRSHP CO.', album: "Summer Camp '26", length: 311, hue: 40, src: M('thank-god-im-free.mp3'), art: M('thank-god-im-free.jpg') },
-  { title: 'The Wonderful Blood', artist: 'Tiffany Hudson', album: 'The Wonderful Blood', length: 525, hue: 350, src: M('the-wonderful-blood.mp3') },
+  { title: 'You Rescued Me', artist: 'Upper Room Collective', album: 'You Rescued Me', length: 281, hue: 206, src: M('you-saved-me.mp3') },
+  { title: 'Recall The Time', artist: 'Mikael Jackston', album: 'Dangerous Hours', length: 239, hue: 32, src: M('remember-the-time.mp3'), art: M('remember-the-time.png') },
+  { title: 'Give Me Only Jesus (Spontaneous)', artist: 'Bethal Songs, Abby Gambo, Jen Johnston', album: 'Live', length: 706, hue: 198, src: M('give-me-jesus.mp3') },
+  { title: "Thank The Lord I'm Freed", artist: 'Rey Hernando, SoCal Worship Co.', album: "Summer Camp '26", length: 311, hue: 40, src: M('thank-god-im-free.mp3'), art: M('thank-god-im-free.jpg') },
+  { title: 'The Marvelous Blood', artist: 'Tiffani Hutson', album: 'The Marvelous Blood', length: 525, hue: 350, src: M('the-wonderful-blood.mp3') },
 ]
 
 export const STATIONS = [
