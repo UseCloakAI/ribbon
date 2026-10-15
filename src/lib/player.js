@@ -11,6 +11,10 @@
 import { TRACKS } from '../data/media.js'
 import { getState, setState, subscribe } from './store.js'
 
+// One player per page, ever. If an older copy of this module is still alive
+// (the dev server hot-swapping code while music plays), silence it first so
+// two songs can never play over each other.
+window.__ribbonPlayer?.stop()
 const audio = new Audio()
 audio.preload = 'auto'
 let analyser = null
@@ -323,6 +327,16 @@ function sync() {
   if (!s.playing && !audio.paused) audio.pause()
   applyStemGains()
 }
+
+function stopAll() {
+  audio.pause()
+  audio.removeAttribute('src')
+  audio.load()
+  clearStems()
+  graph.ctx?.close()
+}
+window.__ribbonPlayer = { stop: stopAll }
+if (import.meta.hot) import.meta.hot.dispose(stopAll)
 
 export function startPlayer() {
   audio.addEventListener('timeupdate', () => {
