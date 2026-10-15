@@ -1,0 +1,24 @@
+{
+  "name": "ribbon",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "ribbon: a knob-driven car launcher for Raspberry Pi 4",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host --port 4173"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "motion": "^14.2.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.2",
+    "vite": "^8.3.4"
+  }
+}

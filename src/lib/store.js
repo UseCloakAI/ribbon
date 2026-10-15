@@ -1,0 +1,92 @@
+import { useSyncExternalStore } from 'react'
+import { TRACKS } from '../data/media.js'
+
+const KEY = 'ribbon.settings.v1'
+const SETTINGS = {
+  volume: 42,
+  brightness: 92,
+  mode: 'day', // day | night | auto (follows the clock)
+  wave: 'full', // full | calm | still
+  clicks: true,
+  hints: true,
+  invert: false,
+  sensitivity: 'normal', // fine | normal | coarse
+  balance: 0,
+  bass: 2,
+  treble: 1,
+  dongle: true,
+  phone: 0,
+}
+
+let saved = {}
+try {
+  saved = JSON.parse(localStorage.getItem(KEY)) || {}
+} catch {
+  saved = {}
+}
+
+let state = {
+  ...SETTINGS,
+  ...saved,
+  track: 0,
+  playing: true,
+  position: 47,
+  freq: 101.9,
+  carplay: 'idle', // idle | connecting | streaming | error
+  toast: null,
+  bootKey: 0,
+}
+
+const listeners = new Set()
+
+function persist() {
+  const out = {}
+  for (const k of Object.keys(SETTINGS)) out[k] = state[k]
+  try {
+    localStorage.setItem(KEY, JSON.stringify(out))
+  } catch {
+    /* storage can be unavailable in kiosk/private modes */
+  }
+}
+
+export function getState() {
+  return state
+}
+
+export function setState(patch) {
+  const next = typeof patch === 'function' ? patch(state) : patch
+  state = { ...state, ...next }
+  if (Object.keys(next).some((k) => k in SETTINGS)) persist()
+  listeners.forEach((l) => l())
+}
+
+function subscribe(l) {
+  listeners.add(l)
+  return () => listeners.delete(l)
+}
+
+// Selectors must return primitives (or stable references).
+export function useStore(selector) {
+  return useSyncExternalStore(subscribe, () => selector(state))
+}
+
+let toastTimer
+export function toast(text) {
+  clearTimeout(toastTimer)
+  setState({ toast: { text, id: Date.now() } })
+  toastTimer = setTimeout(() => setState({ toast: null }), 2200)
+}
+
+export function startMediaClock() {
+  setInterval(() => {
+    if (!state.playing) return
+    const t = TRACKS[state.track]
+    if (state.position + 1 >= t.length) {
+      setState({ track: (state.track + 1) % TRACKS.length, position: 0 })
+    } else {
+      setState({ position: state.position + 1 })
+    }
+  }, 1000)
+}
+
+export const clamp = (v, a, b) => Math.min(b, Math.max(a, v))
