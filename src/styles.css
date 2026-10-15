@@ -1333,33 +1333,20 @@ kbd {
   z-index: 40;
   pointer-events: none;
 }
-/* night that opens from the horizon outward as --r grows */
+/* night that opens as a band along the horizon, widening as --r grows */
 .boot-dark {
   --r: 0%;
   position: absolute;
   inset: 0;
   background: radial-gradient(80% 60% at 50% 60%, #0d2849, #030812);
-  -webkit-mask-image: radial-gradient(120% 95% at 50% 59%, transparent calc(var(--r) - 45%), #000 var(--r));
-  mask-image: radial-gradient(120% 95% at 50% 59%, transparent calc(var(--r) - 45%), #000 var(--r));
-}
-.boot-point {
-  position: absolute;
-  left: 50%;
-  top: 59%;
-  width: 10px;
-  height: 10px;
-  margin: -5px 0 0 -5px;
-  border-radius: 50%;
-  background: #f4f9ff;
-  box-shadow:
-    0 0 18px 6px rgba(170, 215, 255, 0.55),
-    0 0 70px 26px rgba(110, 175, 255, 0.22);
+  -webkit-mask-image: radial-gradient(240% 70% at 50% 59%, transparent calc(var(--r) - 45%), #000 var(--r));
+  mask-image: radial-gradient(240% 70% at 50% 59%, transparent calc(var(--r) - 45%), #000 var(--r));
 }
 .boot-standby {
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(59% + 34px);
+  top: calc(59% + 24px);
   text-align: center;
   font-size: 14px;
   font-weight: 500;

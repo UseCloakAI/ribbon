@@ -6,8 +6,6 @@ import { audioLocked, sfx, whenReady } from '../lib/sound.js'
 import { EASE, EASE_IN, EASE_IO } from '../lib/motion.js'
 
 const WORD = 'ribbon'.split('')
-// the point's inhale before it flashes: slow in, quick release
-const EASE_SOFT_IN = [0.5, 0, 0.75, 0]
 const STEPS = ['Waking up', 'Loading library', 'Looking for iPhone', 'Ready']
 
 // A thread that is straight, then becomes the wave. Same command structure
@@ -24,8 +22,8 @@ const GLINTS = [
 ]
 
 // The startup, scored to the startup sound:
-//   standby  (audio locked) a point of light breathes until a key is pressed
-//   0.00s    the point gathers itself, then flashes and stretches into a thread
+//   standby  (audio locked) a quiet prompt waits for the first key
+//   0.00s    a thread of light stretches out from the center
 //   0.60s    dawn spreads out from the thread, the thread bends into a wave
 //   0.75s    the live wave sweeps in and takes over; glints ride the bell notes
 //   1.15s    on the chime, the wordmark rises out of the horizon line
@@ -104,7 +102,7 @@ export default function Boot({ onDone }) {
         transition={{ '--r': { duration: 1.8, ease: EASE_IO }, opacity: { duration: 1.2, ease: EASE_IO, delay: 0.3 } }}
       />
 
-      {/* standby: one point of light, breathing */}
+      {/* standby: waits quietly for the first key */}
       <AnimatePresence>
         {phase === -1 && (
           <motion.p
@@ -118,29 +116,15 @@ export default function Boot({ onDone }) {
           </motion.p>
         )}
       </AnimatePresence>
-      <motion.span
-        className="boot-point"
-        initial={{ scale: 0, opacity: 0 }}
-        animate={
-          phase === -1
-            ? { scale: [0.85, 1.25, 0.85], opacity: [0.55, 1, 0.55] }
-            : { scale: [1, 0.6, 2.2, 0], opacity: [1, 1, 1, 0] }
-        }
-        transition={
-          phase === -1
-            ? { duration: 2.8, ease: 'easeInOut', repeat: Infinity }
-            : { duration: 0.75, times: [0, 0.2, 0.5, 1], ease: [EASE_SOFT_IN, EASE, EASE] }
-        }
-      />
 
-      {/* the thread: stretches out of the point, then bends into the wave */}
+      {/* the thread: stretches out from the center, then bends into the wave */}
       <motion.div
         className="boot-thread"
         initial={{ scaleX: 0, opacity: 0 }}
         animate={on(0) ? { scaleX: 1, opacity: on(1) ? 0 : 1 } : { scaleX: 0, opacity: 0 }}
         transition={{
-          scaleX: { duration: 0.95, ease: EASE, delay: 0.12 },
-          opacity: on(1) ? { duration: 1.1, ease: EASE_IO, delay: 0.55 } : { duration: 0.15, delay: 0.12 },
+          scaleX: { duration: 0.95, ease: EASE },
+          opacity: on(1) ? { duration: 1.1, ease: EASE_IO, delay: 0.55 } : { duration: 0.15 },
         }}
       >
         <svg viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">
