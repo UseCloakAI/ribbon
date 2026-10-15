@@ -1,4 +1,4 @@
-// The library. Audio and artwork live in public/music (kept out of git);
+// The library. Audio and artwork live in public/music;
 // tracks without embedded artwork get a generated cover. Lengths in seconds.
 const M = (f) => `${import.meta.env.BASE_URL}music/${f}`
 export const TRACKS = [
