@@ -5,6 +5,7 @@ import { bus } from '../lib/bus.js'
 import { clamp, setState, useStore } from '../lib/store.js'
 import KnobList from './KnobList.jsx'
 import { sfx } from '../lib/sound.js'
+import Shared from './Shared.jsx'
 
 // Shared knob pattern for settings: turn moves focus, press on a value
 // "grabs" it (the knob now adjusts it), press or back lets go.
@@ -106,7 +107,7 @@ export default function SettingsPanel({ rows, icon }) {
                   </span>
                 ) : (
                   <>
-                    {display(r)}
+                    <Shared id={`set-${r.key ?? r.label}`}>{display(r)}</Shared>
                     {r.type === 'range' && r.unit && <small>{r.unit}</small>}
                   </>
                 )}

@@ -4,6 +4,7 @@ import { useAppKnob, useReadout } from '../lib/appContext.js'
 import { bus } from '../lib/bus.js'
 import { toast } from '../lib/store.js'
 import { EASE } from '../lib/motion.js'
+import Shared from '../components/Shared.jsx'
 
 // Sample data until an OBD-II reader is wired in.
 const INITIAL = [
@@ -69,7 +70,7 @@ export default function Trip({ icon }) {
             <div key={label} className={`tile ${i === 0 ? 'is-hero' : ''}`}>
               <span className="tile-label">{label}</span>
               <span className="tile-value">
-                {value}
+                <Shared id={i === 0 && tab === 0 ? 'trip-km' : undefined}>{value}</Shared>
                 <small>{unit}</small>
               </span>
             </div>

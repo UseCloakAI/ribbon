@@ -1384,10 +1384,14 @@ img.track-art {
 .ribbon[data-mode='night'] .backdrop-veil {
   background: rgba(4, 14, 32, 0.45);
 }
-.np-bpm {
-  font-variant-numeric: tabular-nums;
-}
 .np-title > span,
 .pv-num {
   display: inline-block;
+}
+.shared {
+  display: inline-block;
+}
+.track-art-wrap {
+  flex: none;
+  line-height: 0;
 }

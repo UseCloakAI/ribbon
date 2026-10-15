@@ -4,6 +4,7 @@ import { useStore } from '../lib/store.js'
 import { PHONES, TRACKS, fmtTime } from '../data/media.js'
 import { AlbumArt, Bars } from '../apps/NowPlaying.jsx'
 import { useShared } from '../lib/shared.js'
+import Shared from './Shared.jsx'
 
 // Items that show the same live state share one widget, so moving between
 // them keeps the same elements on screen instead of swapping them.
@@ -35,42 +36,44 @@ function Widget({ id }) {
     case 'phones':
       return (
         <div className="pv-big pv-big-sm">
-          {PHONES[s.phone]?.name}
+          <Shared id="phone-name">{PHONES[s.phone]?.name}</Shared>
           <small>{s.dongle ? 'Adapter ready' : 'Adapter not found'}</small>
         </div>
       )
     case 'dongle':
       return (
         <div className="pv-big pv-big-sm">
-          {s.dongle ? 'Connected' : 'Not found'}
+          <Shared id="set-Status">{s.dongle ? 'Connected' : 'Not found'}</Shared>
           <small>USB adapter</small>
         </div>
       )
     case 'trip':
       return (
         <div className="pv-big">
-          128.4
+          <Shared id="trip-km">128.4</Shared>
           <small>km on Trip A</small>
         </div>
       )
     case 'gauges':
       return (
         <div className="pv-big">
-          64
+          <Shared id="gauge-speed">64</Shared>
           <small>km/h, demo signal</small>
         </div>
       )
     case 'display':
       return (
         <div className="pv-big">
-          {s.brightness}%
+          <span>
+            <Shared id="set-brightness">{s.brightness}</Shared>%
+          </span>
           <small>{s.mode === 'auto' ? 'Auto theme' : s.mode === 'day' ? 'Day theme' : 'Night theme'}</small>
         </div>
       )
     case 'sound':
       return (
         <div className="pv-big">
-          {s.volume}
+          <Shared id="set-volume">{s.volume}</Shared>
           <small>volume</small>
         </div>
       )

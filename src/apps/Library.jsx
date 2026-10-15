@@ -5,6 +5,7 @@ import { setState, toast, useStore } from '../lib/store.js'
 import { TRACKS, fmtTime } from '../data/media.js'
 import KnobList, { SkeletonList } from '../components/KnobList.jsx'
 import { Bars } from './NowPlaying.jsx'
+import Shared from '../components/Shared.jsx'
 
 export default function Library() {
   const [ready, setReady] = useState(false)
@@ -47,14 +48,16 @@ export default function Library() {
       keyOf={(t) => t.title}
       render={(t, i) => (
         <div className="track-row">
-          {t.art ? (
-            <img className="track-art" src={t.art} alt="" />
-          ) : (
-            <span
-              className="track-art"
-              style={{ background: `linear-gradient(140deg, hsl(${t.hue} 80% 78%), hsl(${t.hue + 20} 58% 36%))` }}
-            />
-          )}
+          <Shared id={i === current ? 'np-art' : undefined} uniform={false} className="track-art-wrap">
+            {t.art ? (
+              <img className="track-art" src={t.art} alt="" />
+            ) : (
+              <span
+                className="track-art"
+                style={{ background: `linear-gradient(140deg, hsl(${t.hue} 80% 78%), hsl(${t.hue + 20} 58% 36%))` }}
+              />
+            )}
+          </Shared>
           <span className="track-text">
             <b>{t.title}</b>
             <span>{t.artist}</span>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { useAppKnob, useReadout } from '../lib/appContext.js'
 import { bus } from '../lib/bus.js'
+import Shared from '../components/Shared.jsx'
 
 const GAUGES = [
   { id: 'speed', label: 'Speed', unit: 'km/h', min: 0, max: 180, fmt: (v) => v.toFixed(0) },
@@ -41,7 +42,9 @@ function Dial({ g, value, size, focused }) {
         <motion.path d={PATH} className="gauge-value" pathLength="1" animate={{ pathLength: f }} transition={{ duration: 0.2, ease: 'linear' }} />
       </svg>
       <div className="gauge-read">
-        <span className="gauge-num">{g.fmt(value)}</span>
+        <Shared id={focused && size > 200 && g.id === 'speed' ? 'gauge-speed' : undefined} className="gauge-num">
+          {g.fmt(value)}
+        </Shared>
         <span className="gauge-unit">{g.unit}</span>
         <span className="gauge-label">{g.label}</span>
       </div>

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { motion, useSpring, useTransform, useVelocity } from 'motion/react'
 import { bus } from '../lib/bus.js'
 import { CASCADE, EASE, EASE_IN, FAN, SPRING } from '../lib/motion.js'
+import Shared from './Shared.jsx'
 
 // A ring's rotation, in item units. `from` starts it wound back so it can
 // unfurl into place; `active` lets it rubber-band when the knob hits an end.
@@ -96,7 +97,9 @@ export function ItemNode({ item, focus, index, entering, launch }) {
           <span className="item-icon">
             <Icon size={28} weight="light" />
           </span>
-          <span className="item-label">{item.label}</span>
+          <Shared id={`title-${item.id}`} className="item-label">
+            {item.label}
+          </Shared>
         </motion.div>
       </motion.div>
     </motion.div>

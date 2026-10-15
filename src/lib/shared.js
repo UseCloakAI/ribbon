@@ -42,7 +42,7 @@ const SIG = (x) => {
 }
 
 // the element that carries the rounding (the art tile), or the node itself
-const shape = (el) => (el.matches('.art') ? el : el.querySelector('.art')) ?? el
+const shape = (el) => (el.matches('.art, .track-art') ? el : el.querySelector('.art, .track-art')) ?? el
 const radiusOf = (el) => parseFloat(getComputedStyle(shape(el)).borderTopLeftRadius) || 0
 
 // A clone moved to the stage loses styles that came from its old context

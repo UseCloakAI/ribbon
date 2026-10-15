@@ -174,7 +174,7 @@ export default function App() {
 
               <AnimatePresence>
                 {AppView && (
-                  <AppFrame key={app.id} title={app.label}>
+                  <AppFrame key={app.id} id={app.id} title={app.label}>
                     <AppView icon={app.icon} />
                   </AppFrame>
                 )}

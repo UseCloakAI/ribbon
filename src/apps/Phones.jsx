@@ -5,6 +5,7 @@ import { bus } from '../lib/bus.js'
 import { setState, toast, useStore } from '../lib/store.js'
 import { PHONES } from '../data/media.js'
 import KnobList from '../components/KnobList.jsx'
+import Shared from '../components/Shared.jsx'
 
 const ROWS = [...PHONES.map((p, i) => ({ ...p, i })), { pair: true, name: 'Pair a new iPhone' }]
 
@@ -41,7 +42,9 @@ export default function Phones({ icon }) {
         <div className="phone-row">
           <span className="phone-icon">{r.pair ? <Plus size={22} weight="bold" /> : <DeviceMobile size={24} weight="duotone" />}</span>
           <span className="track-text">
-            <b>{r.name}</b>
+            <b>
+              <Shared id={!r.pair && r.i === preferred ? 'phone-name' : undefined}>{r.name}</Shared>
+            </b>
             {!r.pair && (
               <span>
                 {r.model}, last used {r.last.toLowerCase()}
