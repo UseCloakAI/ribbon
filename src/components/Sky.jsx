@@ -12,24 +12,12 @@ const RIBBONS = [
 const TAU = Math.PI * 2
 const SPEED = { full: 1, calm: 0.35, still: 0 }
 
-// Every strand moves at its own rate so the bundle never reads as one rigid
-// shape: each lags the ribbon by its own amount, drifts along its own slow
-// secondary wave, and twists a little faster or slower than its neighbours,
-// so lines slide past and cross each other like loose threads.
-// Seeded so the wave is the same on every boot.
-let seed = 7
+// Startup reveal: each line sweeps in on its own delay and speed, so the
+// wave draws itself thread by thread instead of as one wipe. Seeded.
+let seed = 11
 const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
-const STRANDS = RIBBONS.map((r) =>
-  Array.from({ length: r.strands }, () => ({
-    lag: rand() * 0.9, // phase behind the ribbon's center wave
-    rate: 0.82 + rand() * 0.36, // own speed along the center wave
-    twist: 0.86 + rand() * 0.28, // own twisting speed
-    amp: 0.004 + rand() * 0.011, // own drift wave, fraction of height
-    k: 0.5 + rand() * 1.3,
-    w: (0.18 + rand() * 0.42) * (rand() < 0.5 ? -1 : 1),
-    p: rand() * TAU,
-  })),
-)
+const REVEAL = RIBBONS.map((r) => Array.from({ length: r.strands }, () => ({ delay: rand() * 0.45, dur: 0.9 + rand() * 1.0 })))
+const ease = (x) => 1 - Math.pow(1 - x, 3)
 
 export default function Sky({ mode }) {
   const canvas = useRef(null)
@@ -54,8 +42,6 @@ export default function Sky({ mode }) {
     const samples = 96
     const cy = new Float32Array(samples + 1)
     const hw = new Float32Array(samples + 1)
-    // the ribbon narrows toward the screen edges
-    const env = Float32Array.from({ length: samples + 1 }, (_, i) => 0.55 + 0.45 * Math.sin((i / samples) * Math.PI))
     const sparks = Array.from({ length: 16 }, () => ({
       x: Math.random(),
       y: 0.38 + Math.random() * 0.48,
@@ -92,11 +78,16 @@ export default function Sky({ mode }) {
       t += dt * speed
 
       let reveal = 1
+      const since = revealStart === null ? Infinity : (performance.now() - revealStart - 250) / 1000
       if (revealStart !== null) {
-        reveal = Math.min(1, (performance.now() - revealStart - 250) / 1500)
-        if (reveal >= 1) revealStart = null
-        reveal = Math.max(0, reveal)
-        reveal = 1 - Math.pow(1 - reveal, 3)
+        reveal = Math.max(0, Math.min(1, since / 1.5))
+        if (since > 2) revealStart = null
+        reveal = ease(reveal)
+      }
+      const strandX = (ri, s) => {
+        if (since === Infinity) return W
+        const rv = REVEAL[ri][s % REVEAL[ri].length]
+        return W * ease(Math.max(0, Math.min(1, (since - rv.delay) / rv.dur)))
       }
 
       ctx.clearRect(0, 0, W, H)
@@ -112,7 +103,7 @@ export default function Sky({ mode }) {
             H * r.y +
             Math.sin(nx * r.k1 * TAU + ph * r.w1 + r.p) * H * r.a1 +
             Math.sin(nx * r.k2 * TAU - ph * r.w2) * H * r.a2
-          hw[i] = H * r.width * Math.sin(nx * r.kt * TAU + ph * r.wt + r.p) * env[i]
+          hw[i] = H * r.width * Math.sin(nx * r.kt * TAU + ph * r.wt + r.p) * (0.55 + 0.45 * Math.sin(nx * Math.PI))
         }
 
         // translucent sheet between the outer strands
@@ -132,27 +123,18 @@ export default function Sky({ mode }) {
         ctx.fill()
 
         const n = Math.max(6, Math.round(r.strands * strandScale))
-        const params = STRANDS[ri]
-        const ph = t + push
         ctx.lineWidth = 1
         for (let s = 0; s < n; s++) {
           const u = s / (n - 1) - 0.5
-          const sp = params[s % params.length]
           const edge = Math.pow(Math.abs(u) * 2, 2)
           ctx.strokeStyle = `rgba(${rgb},${r.alpha * (night ? 1 : 1.3) * (0.22 + 0.78 * edge) * (1 + flash * 0.4)})`
-          const pc = ph * sp.rate - sp.lag // this strand's clock on the center wave
-          const pt = ph * sp.twist // and on the twist
+          const sx = strandX(ri, s)
+          if (sx <= 0) continue
           ctx.beginPath()
           for (let i = 0; i <= samples; i++) {
-            const nx = i / samples
-            const x = nx * W
-            if (x > maxX) break
-            const c =
-              H * r.y +
-              Math.sin(nx * r.k1 * TAU + pc * r.w1 + r.p) * H * r.a1 +
-              Math.sin(nx * r.k2 * TAU - pc * r.w2) * H * r.a2
-            const w = H * r.width * Math.sin(nx * r.kt * TAU + pt * r.wt + r.p) * env[i]
-            const y = c + u * w + Math.sin(nx * sp.k * TAU + t * sp.w + sp.p) * H * sp.amp
+            const x = (i / samples) * W
+            if (x > sx) break
+            const y = cy[i] + u * hw[i]
             i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)
           }
           ctx.stroke()
