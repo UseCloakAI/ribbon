@@ -3,18 +3,28 @@ import { EASE, EASE_IN } from '../lib/motion.js'
 import { useStore } from '../lib/store.js'
 import { PHONES, STATIONS, TRACKS, fmtTime } from '../data/media.js'
 import { AlbumArt, Bars } from '../apps/NowPlaying.jsx'
+import { useShared } from '../lib/shared.js'
+
+// Items that show the same live state share one widget, so moving between
+// them keeps the same elements on screen instead of swapping them.
+const KIND = { nowplaying: 'music', library: 'music', carplay: 'phone', phones: 'phone' }
 
 function Widget({ id }) {
   const s = useStore((x) => x)
+  const art = useShared('np-art')
+  const title = useShared('np-title', { uniform: true })
+  const freq = useShared('radio-freq', { uniform: true })
   const t = TRACKS[s.track]
   switch (id) {
     case 'nowplaying':
     case 'library':
       return (
         <div className="pv-np">
-          <AlbumArt track={t} size={92} />
+          <div ref={art}>
+            <AlbumArt track={t} size={92} />
+          </div>
           <div>
-            <b>{t.title}</b>
+            <b ref={title}>{t.title}</b>
             <span>{t.artist}</span>
             <span className="pv-time">
               <Bars playing={s.playing} count={4} /> {fmtTime(s.position)} / {fmtTime(t.length)}
@@ -26,7 +36,9 @@ function Widget({ id }) {
       const st = STATIONS.find((x) => Math.abs(x.freq - s.freq) < 0.05)
       return (
         <div className="pv-big">
-          {s.freq.toFixed(1)}
+          <span ref={freq} className="pv-num">
+            {s.freq.toFixed(1)}
+          </span>
           <small>FM {st ? st.name : ''}</small>
         </div>
       )
@@ -108,7 +120,7 @@ export default function Preview({ item, dir = 1, launching, entering }) {
     >
       <AnimatePresence mode="popLayout" initial={false} custom={dir}>
         <motion.div
-          key={item.id}
+          key={KIND[item.id] ?? item.id}
           custom={dir}
           variants={{
             enter: (d) => ({ opacity: 0, y: d * 22 }),

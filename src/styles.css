@@ -1516,3 +1516,7 @@ img.track-art {
 .np-bpm {
   font-variant-numeric: tabular-nums;
 }
+.np-title > span,
+.pv-num {
+  display: inline-block;
+}

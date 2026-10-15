@@ -7,6 +7,7 @@ import { clamp, getState, setState, useStore } from '../lib/store.js'
 import { TRACKS, fmtTime } from '../data/media.js'
 import { sfx } from '../lib/sound.js'
 import { musicTempo, seek, setScrubbing } from '../lib/player.js'
+import { useShared } from '../lib/shared.js'
 import { EASE_IN } from '../lib/motion.js'
 
 export function AlbumArt({ track, size = 236 }) {
@@ -48,6 +49,8 @@ export default function NowPlaying({ icon }) {
   const [scrubT, setScrubT] = useState(0)
   const lastTurn = useRef(0)
   const [bpm, setBpm] = useState(0)
+  const artRef = useShared('np-art')
+  const titleRef = useShared('np-title', { uniform: true })
   useEffect(() => {
     const id = setInterval(() => setBpm(musicTempo().bpm), 1000)
     return () => clearInterval(id)
@@ -148,7 +151,7 @@ export default function NowPlaying({ icon }) {
 
   return (
     <div className="np">
-      <div className="np-art">
+      <div className="np-art" ref={artRef}>
         <AnimatePresence mode="popLayout" initial={false} custom={dir}>
           <motion.div
             key={trackIdx}
@@ -171,7 +174,9 @@ export default function NowPlaying({ icon }) {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.22 }}
           >
-            <h3 className="np-title">{track.title}</h3>
+            <h3 className="np-title">
+              <span ref={titleRef}>{track.title}</span>
+            </h3>
             <p className="np-artist">
               {track.artist}
               <span>{track.album}</span>
@@ -193,7 +198,7 @@ export default function NowPlaying({ icon }) {
           </div>
           <div className="np-times">
             <span>{fmtTime(shown)}</span>
-            <span className="np-bpm">{bpm ? `${bpm} BPM` : <Bars playing={playing} />}</span>
+            <span className="np-bpm">{bpm ? `${bpm} BPM` : ''}</span>
             <span>-{fmtTime(track.length - shown)}</span>
           </div>
         </div>

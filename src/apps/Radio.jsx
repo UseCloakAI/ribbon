@@ -4,6 +4,7 @@ import { bus } from '../lib/bus.js'
 import { getState, setState, useStore } from '../lib/store.js'
 import { STATIONS } from '../data/media.js'
 import { sfx } from '../lib/sound.js'
+import { useShared } from '../lib/shared.js'
 
 const MIN = 87.5
 const MAX = 108.0
@@ -12,6 +13,7 @@ const TICKS = Array.from({ length: Math.round((MAX - MIN) * 10) + 1 }, (_, i) =>
 
 export default function Radio() {
   const freq = useStore((s) => s.freq)
+  const freqRef = useShared('radio-freq', { uniform: true })
   const station = STATIONS.find((st) => Math.abs(st.freq - freq) < 0.05)
 
   useReadout({ key: 'fm', value: freq.toFixed(1), unit: 'FM' })
@@ -40,7 +42,9 @@ export default function Radio() {
   return (
     <div className="radio">
       <div className="radio-readout">
-        <span className="radio-freq">{freq.toFixed(1)}</span>
+        <span className="radio-freq" ref={freqRef}>
+          {freq.toFixed(1)}
+        </span>
         <span className="radio-band">FM</span>
       </div>
       <div className="radio-station">

@@ -8,5 +8,5 @@ export default defineConfig({
   base: './',
   plugins: [react()],
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
-  build: { target: 'es2020', assetsInlineLimit: 0 },
+  build: { target: 'es2020', assetsInlineLimit: 0, chunkSizeWarningLimit: 800 },
 })
