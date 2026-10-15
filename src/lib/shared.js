@@ -76,9 +76,9 @@ function makeGhost(src, stage, rect, sr, k) {
 }
 
 // Two snapshots fly together: one of the source (what you were looking at)
-// and one of the destination (what it becomes). The destination fades in
-// over the source early in the flight, so typography, shadow and detail
-// change continuously instead of popping at either end. Corner radius is
+// and one of the destination (what it becomes). The source carries most of
+// the flight and the two cross-fade over the last stretch, so typography,
+// shadow and detail change over smoothly instead of popping at the end. Corner radius is
 // steered per frame so the visible rounding blends from one to the other
 // regardless of scale. Positions track the target's live rect, so the
 // flight ends exactly where the target has settled.
@@ -95,8 +95,8 @@ function fly(from, to, uniform, duration) {
 
   // Text is the same string at both ends, so it flies as one copy (two
   // cross-fading copies of different widths read as a double image).
-  const gB = makeGhost(to, stage, b, sr, k) // starts at the target's size
   const gA = uniform ? null : makeGhost(from, stage, a, sr, k) // starts at its own size
+  const gB = makeGhost(to, stage, b, sr, k) // starts at the target's size, on top
   if (uniform) gB.style.whiteSpace = 'nowrap'
   const shA = gA && shape(gA)
   const shB = shape(gB)
@@ -124,7 +124,14 @@ function fly(from, to, uniform, duration) {
       const r = rA + (rB - rA) * e
       ;(g === gA ? shA : shB).style.borderRadius = `${r / Math.min(kx, ky)}px`
     }
-    if (gA) gB.style.opacity = String(Math.min(1, p / 0.45))
+    if (gA) {
+      // the source carries the flight; near the end the two cross-fade so
+      // detail (title text on the art, shadow) changes over, not at the end
+      const x = Math.max(0, Math.min(1, (p - 0.55) / 0.4))
+      const xf = x * x * (3 - 2 * x)
+      gB.style.opacity = String(xf)
+      gA.style.opacity = String(1 - xf)
+    }
     if (p < 1) requestAnimationFrame(step)
     else {
       to.style.visibility = ''
