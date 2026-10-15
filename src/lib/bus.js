@@ -1,4 +1,4 @@
-// Tiny event bus for visual side effects (wave surge, knob spin, clicks)
+// Tiny event bus for visual side effects (wave surge, knob spin, sound)
 // that should not re-render React.
 const map = new Map()
 

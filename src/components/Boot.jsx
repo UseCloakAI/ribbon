@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { bus } from '../lib/bus.js'
 import { useReducedMotionPref } from '../lib/hooks.js'
+import { sfx } from '../lib/sound.js'
 
 const WORD = 'ribbon'.split('')
 const STEPS = ['Waking the knob', 'Loading library', 'Looking for iPhone', 'Ready']
@@ -18,6 +19,7 @@ export default function Boot({ onDone }) {
     const k = reduced ? 0.4 : 1
     const timers = []
     const at = (ms, fn) => timers.push(setTimeout(fn, ms * k))
+    sfx('boot')
     let finished = false
     let revealed = false
     const finish = () => {
@@ -31,7 +33,10 @@ export default function Boot({ onDone }) {
       revealed = true
       bus.emit('wave:reveal')
     })
-    at(1150, () => setPhase(2))
+    at(1150, () => {
+      setPhase(2)
+      sfx('chime')
+    })
     at(1700, () => setPhase(3))
     at(2050, () => setStep(1))
     at(2450, () => setStep(2))

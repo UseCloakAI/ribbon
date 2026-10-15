@@ -1,6 +1,6 @@
 # ribbon
 
-A knob-driven car launcher for Raspberry Pi 4. React + Vite, running full screen in Chromium. Light-sky look with a live wave, and every menu orbits a single knob on the left of the screen.
+A knob-driven car launcher for Raspberry Pi 4. React + Vite, running full screen in Chromium. Light-sky look with a live wave. The knob is a large disc cut in half by the left edge of the screen, and every menu orbits it.
 
 Stage is **1024 × 768** (4:3, the iPad 2 panel). It scales to fit any screen and letterboxes over the sky.
 
@@ -32,13 +32,19 @@ Two rings orbit the knob: categories on the inner ring, their items on the outer
 ## What's in the prototype
 
 - **Startup**: a thread of light draws across the dark, the sky comes up and the thread becomes the wave, wordmark rises, short load, hand-off to the knob as the orbits fan out.
-- **Launcher**: knob with detent spin, press squash and ripple, rubber-band at ring ends, loader ring on launch. Wave surges with each turn.
+- **Launcher**: half-disc knob whose rim ticks turn with each notch, a fixed accent pointer at the selection slot, and one accent line reaching from the knob to whatever is selected. Press squashes it and rings out a ripple, ring ends rubber-band, and the rim fills as the launch loader. The visible half shows the current value. Wave surges with each turn.
 - **Music**: Now Playing (controls + grabbed volume), Radio (0.1 MHz per notch, presets), Library (loading skeleton, then list).
 - **CarPlay**: Launch CarPlay (full screen, opens out of the knob, connection stages, error + retry), Phones, Adapter.
 - **Drive**: Trip (three meters, reset), Gauges (live demo signal).
-- **Settings**: Display (brightness, day / night / auto, wave Full / Calm / Still), Sound, Knob (direction, wheel steps, detent clicks, hints), About (replay startup, reset).
+- **Settings**: Display (brightness, day / night / auto, wave Full / Calm / Still), Sound (volume, balance, tone, interface sounds), Knob (direction, wheel steps, hints), About (replay startup, reset).
 
 Trip, gauge and library data are samples.
+
+## Sound
+
+All sound is synthesized live with WebAudio (`src/lib/sound.js`), no audio files. Navigation is tiny and dry: a glassy tick per notch, a felt thud at the end of a ring, a rising fifth to step in and a falling one to step out. Values you grab with the knob play a tone whose pitch follows the value, and radio tuning breathes a little static between stations. The bigger moments get chords and a short reverb: startup (a Cmaj9 pad that swells with the sky, a chime as the wordmark lands, a low tone as the knob arrives), app launch (air rushing in while the rim fills, then a chord), and CarPlay connecting. Interface sounds and their volume live in Settings › Sound.
+
+Browsers block audio until the first key press, so the startup sound only plays on a fresh load in kiosk mode (`scripts/kiosk.sh` passes `--autoplay-policy=no-user-gesture-required`). In dev, `__sfx('launch')` in the console plays any sound.
 
 ## CarPlay
 
@@ -74,6 +80,6 @@ src/
                         AppFrame, KnobList, SettingsPanel, Hints, Toast
   apps/                 NowPlaying, Radio, Library, CarPlay, Phones, Trip, Gauges, settings
   carplay/bridge.js     adapter seam + command map
-  lib/                  knob input, store, geometry, hooks, detent click audio
+  lib/                  knob input, store, geometry, hooks, sound design
   data/                 menu tree, sample media
 ```

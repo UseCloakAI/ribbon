@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { bus } from './bus.js'
 import { getState } from './store.js'
-import { tick } from './click.js'
 
 // Knob vocabulary: turn(+1/-1), press, back, home.
 // Keyboard stands in for the encoder today. A GPIO encoder exposed as
@@ -26,7 +25,6 @@ export function useKnobInput(dispatch) {
     const fire = (evt) => {
       const s = getState()
       if (evt.type === 'turn' && s.invert) evt = { ...evt, dir: -evt.dir }
-      if (s.clicks) tick(evt.type)
       bus.emit('knob', evt)
       ref.current(evt)
     }

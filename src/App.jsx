@@ -17,7 +17,8 @@ import { bus } from './lib/bus.js'
 import { useKnobInput } from './lib/useKnobInput.js'
 import { useMode, useStageScale } from './lib/hooks.js'
 import { useStore } from './lib/store.js'
-import { C, R_CAT, R_ITEM, STEP_CAT, STEP_ITEM } from './lib/geo.js'
+import { C, KNOB_R, R_CAT, R_ITEM, STEP_CAT, STEP_ITEM } from './lib/geo.js'
+import { sfx } from './lib/sound.js'
 
 const LAUNCH_MS = 640
 
@@ -53,6 +54,7 @@ export default function App() {
 
   const finishBoot = useCallback(() => {
     setBooting(false)
+    sfx('arrive')
     setTimeout(() => setEntering(false), 1600)
   }, [])
 
@@ -63,6 +65,7 @@ export default function App() {
   }
 
   const launch = (item) => {
+    sfx('launch')
     setLaunching(item.id)
     clearTimeout(launchTimer.current)
     launchTimer.current = setTimeout(() => {
@@ -81,6 +84,7 @@ export default function App() {
     if (s.app) {
       if (appHandler.current?.(e)) return
       if (e.type === 'back' || e.type === 'home') {
+        sfx('close')
         closeApp()
         if (e.type === 'home') setLayer('cats')
       }
@@ -99,8 +103,10 @@ export default function App() {
         setItems((a) => a.map((v, i) => (i === s.cat ? n : v)))
       }
     } else if (e.type === 'press') {
-      if (s.layer === 'cats') setLayer('items')
-      else launch(list[s.items[s.cat]])
+      if (s.layer === 'cats') {
+        sfx('enter')
+        setLayer('items')
+      } else launch(list[s.items[s.cat]])
     } else if (e.type === 'back') {
       if (s.layer === 'items') setLayer('cats')
       else bus.emit('bump', -1)
@@ -187,10 +193,11 @@ function Home({ layer, cat, catDir, items, launching, entering }) {
   const category = CATEGORIES[cat]
   const item = category.items[items[cat]]
 
-  const band =
+  // One accent line points from the knob to whatever the knob is turning.
+  const reach =
     layer === 'cats'
-      ? { x: C.x + R_CAT - 50, y: C.y - 50, width: 100, height: 100, borderRadius: 50 }
-      : { x: C.x + R_ITEM - 34, y: C.y - 37, width: 300, height: 74, borderRadius: 37 }
+      ? { x: KNOB_R + 14, width: R_CAT - KNOB_R - 56 }
+      : { x: R_CAT + 44, width: R_ITEM - R_CAT - 80 }
 
   return (
     <motion.div
@@ -213,16 +220,17 @@ function Home({ layer, cat, catDir, items, launching, entering }) {
         <span className={`track-ring ${layer === 'items' ? 'is-on' : ''}`} style={{ width: R_ITEM * 2, height: R_ITEM * 2 }} />
       </motion.div>
 
-      <motion.div
-        className={`band ${launching ? 'is-launching' : ''}`}
-        initial={entering ? { ...band, opacity: 0, scale: 0.6 } : band}
-        animate={{ ...band, opacity: 1, scale: launching ? 1.04 : 1 }}
-        transition={{ type: 'spring', stiffness: 340, damping: 30, opacity: { delay: entering ? 0.5 : 0 } }}
+      <motion.span
+        className={`reach ${launching ? 'is-launching' : ''}`}
+        style={{ top: C.y - 1 }}
+        initial={entering ? { ...reach, opacity: 0, scaleX: 0 } : reach}
+        animate={{ ...reach, opacity: 1, scaleX: 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30, delay: entering ? 0.7 : 0 }}
       />
 
-      <nav className="orbit" style={{ left: C.x, top: C.y }} aria-label="Categories">
+      <nav className={`orbit orbit-cats ${layer === 'items' ? 'is-parked' : ''}`} style={{ left: C.x, top: C.y }} aria-label="Categories">
         {CATEGORIES.map((c, i) => (
-          <OrbitNode key={c.id} pos={catPos} i={i} radius={R_CAT} step={STEP_CAT} range={118} className="node">
+          <OrbitNode key={c.id} pos={catPos} i={i} radius={R_CAT} step={STEP_CAT} range={84} className="node">
             {(focus) => <CategoryNode cat={c} focus={focus} layer={layer} index={i} entering={entering} />}
           </OrbitNode>
         ))}
@@ -259,7 +267,7 @@ function ItemRing({ category, index, layer, entering, dir }) {
       aria-label={`${category.label} items`}
     >
       {category.items.map((it, i) => (
-        <OrbitNode key={it.id} pos={pos} i={i} radius={R_ITEM} step={STEP_ITEM} range={64} className="node node-item">
+        <OrbitNode key={it.id} pos={pos} i={i} radius={R_ITEM} step={STEP_ITEM} range={62} className="node node-item">
           {(focus) => <ItemNode item={it} focus={focus} layer={layer} index={i} entering={entering} />}
         </OrbitNode>
       ))}

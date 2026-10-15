@@ -26,6 +26,8 @@ export function Sound({ icon }) {
         { key: 'balance', label: 'Balance', type: 'range', min: -10, max: 10, step: 1, fmt: (v) => (v === 0 ? 'Center' : v < 0 ? `Left ${-v}` : `Right ${v}`) },
         { key: 'bass', label: 'Bass', type: 'range', min: -6, max: 6, step: 1, unit: 'dB', fmt: signed },
         { key: 'treble', label: 'Treble', type: 'range', min: -6, max: 6, step: 1, unit: 'dB', fmt: signed },
+        { key: 'sounds', label: 'Interface sounds', type: 'toggle' },
+        { key: 'uiVolume', label: 'Interface volume', type: 'range', min: 0, max: 100, step: 5, unit: '%' },
       ]}
     />
   )
@@ -38,7 +40,6 @@ export function KnobSettings({ icon }) {
       rows={[
         { key: 'sensitivity', label: 'Wheel steps', type: 'choice', options: [['fine', 'Fine'], ['normal', 'Normal'], ['coarse', 'Coarse']] },
         { key: 'invert', label: 'Reverse direction', type: 'toggle' },
-        { key: 'clicks', label: 'Detent clicks', type: 'toggle' },
         { key: 'hints', label: 'Show key hints', type: 'toggle' },
       ]}
     />

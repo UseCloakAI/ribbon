@@ -1,8 +1,9 @@
 // Stage geometry: 1024x768, the iPad 2 panel (4:3, landscape).
-// Everything orbits the knob center.
-export const C = { x: 120, y: 414 }
-export const R_CAT = 178
-export const R_ITEM = 304
-export const STEP_CAT = 36
-export const STEP_ITEM = 16
-export const KNOB = 228 // bezel diameter
+// The knob is a large disc centered on the left edge, so only its right
+// half is on screen. Both rings orbit that same center.
+export const C = { x: 0, y: 384 }
+export const KNOB_R = 196
+export const R_CAT = 292
+export const R_ITEM = 424
+export const STEP_CAT = 27
+export const STEP_ITEM = 14

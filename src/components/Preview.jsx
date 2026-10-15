@@ -13,8 +13,8 @@ const BLURB = {
   trip: 'Two trip meters plus distance since the last fill-up.',
   gauges: 'Speed, engine, coolant and battery from the OBD-II port.',
   display: 'Brightness, day or night theme, and how much the wave moves.',
-  sound: 'Volume, balance and a two-band tone control.',
-  knob: 'Direction, wheel step size, detent clicks and on-screen key hints.',
+  sound: 'Volume, balance, tone, and the interface sounds.',
+  knob: 'Direction, wheel step size and on-screen key hints.',
   about: 'Version, screen and input details. Replay the startup from here.',
 }
 

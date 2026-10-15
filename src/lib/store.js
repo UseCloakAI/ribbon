@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { TRACKS } from '../data/media.js'
+import { bus } from './bus.js'
 
 const KEY = 'ribbon.settings.v1'
 const SETTINGS = {
@@ -7,7 +8,8 @@ const SETTINGS = {
   brightness: 92,
   mode: 'day', // day | night | auto (follows the clock)
   wave: 'full', // full | calm | still
-  clicks: true,
+  sounds: true,
+  uiVolume: 60,
   hints: true,
   invert: false,
   sensitivity: 'normal', // fine | normal | coarse
@@ -60,7 +62,7 @@ export function setState(patch) {
   listeners.forEach((l) => l())
 }
 
-function subscribe(l) {
+export function subscribe(l) {
   listeners.add(l)
   return () => listeners.delete(l)
 }
@@ -74,6 +76,7 @@ let toastTimer
 export function toast(text) {
   clearTimeout(toastTimer)
   setState({ toast: { text, id: Date.now() } })
+  bus.emit('toast')
   toastTimer = setTimeout(() => setState({ toast: null }), 2200)
 }
 

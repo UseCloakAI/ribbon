@@ -20,11 +20,11 @@
   --glass-bd: rgba(255, 255, 255, 0.9);
   --line: rgba(12, 39, 64, 0.13);
   --track: rgba(255, 255, 255, 0.62);
-  --shadow: 0 18px 36px -14px rgba(18, 78, 138, 0.42), 0 2px 6px rgba(18, 78, 138, 0.1);
-  --knob-a: #ffffff;
-  --knob-b: #e8f3fb;
-  --knob-c: #b9d6ec;
-  --knurl: rgba(12, 39, 64, 0.17);
+  --shadow: 0 14px 30px -18px rgba(18, 78, 138, 0.4);
+  --disc-a: #fbfdff;
+  --disc-b: #e9f3fa;
+  --disc-edge: rgba(255, 255, 255, 0.9);
+  --disc-shadow: rgba(18, 78, 138, 0.45);
   --acc: #f0662a;
 }
 
@@ -38,11 +38,11 @@
   --glass-bd: rgba(190, 225, 255, 0.26);
   --line: rgba(234, 244, 255, 0.16);
   --track: rgba(160, 210, 255, 0.22);
-  --shadow: 0 18px 36px -14px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.2);
-  --knob-a: #4a79a8;
-  --knob-b: #26507b;
-  --knob-c: #0f2d4f;
-  --knurl: rgba(255, 255, 255, 0.14);
+  --shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.6);
+  --disc-a: #163a63;
+  --disc-b: #0f2b4c;
+  --disc-edge: rgba(190, 225, 255, 0.14);
+  --disc-shadow: rgba(0, 0, 0, 0.6);
   --acc: #ff8650;
 }
 
@@ -203,98 +203,69 @@ kbd {
   position: absolute;
   z-index: 8;
 }
-.knob-bezel {
+.knob-disc {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: repeating-conic-gradient(from -0.35deg, var(--ink-3) 0 0.7deg, transparent 0.7deg 6deg);
-  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 12px), #000 calc(100% - 11px), #000 calc(100% - 2px), transparent calc(100% - 1px));
-  mask: radial-gradient(closest-side, transparent calc(100% - 12px), #000 calc(100% - 11px), #000 calc(100% - 2px), transparent calc(100% - 1px));
-  opacity: 0.8;
+  background: radial-gradient(closest-side, var(--disc-a) 0 72%, var(--disc-b) 100%);
+  box-shadow: 0 0 0 1px var(--disc-edge), 26px 0 70px -30px var(--disc-shadow);
+  transition: background 0.8s;
 }
-.knob-progress {
+.knob-ticks {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from -0.4deg, var(--ink-3) 0 0.8deg, transparent 0.8deg 6deg);
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 22px), #000 calc(100% - 21px), #000 calc(100% - 12px), transparent calc(100% - 11px));
+  mask: radial-gradient(closest-side, transparent calc(100% - 22px), #000 calc(100% - 21px), #000 calc(100% - 12px), transparent calc(100% - 11px));
+  opacity: 0.55;
+}
+.knob-pointer {
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  width: 16px;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 2px;
+  background: var(--acc);
+}
+.knob-load {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  rotate: -90deg;
   overflow: visible;
 }
-.knob-progress circle {
+.knob-load path {
   fill: none;
-}
-.knob-progress-track {
-  stroke: var(--track);
-  stroke-width: 2;
-}
-.knob-progress-bar {
   stroke: var(--acc);
   stroke-width: 4;
   stroke-linecap: round;
 }
-.knob-body {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 160px;
-  height: 160px;
-  margin: -80px 0 0 -80px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 34% 26%, var(--knob-a), var(--knob-b) 48%, var(--knob-c));
-  box-shadow:
-    0 24px 40px -12px rgba(14, 64, 118, 0.5),
-    0 4px 10px rgba(14, 64, 118, 0.16),
-    inset 0 2px 1px rgba(255, 255, 255, 0.85),
-    inset 0 -8px 16px rgba(14, 64, 118, 0.2);
-}
-.knob-knurl {
-  position: absolute;
-  inset: 7px;
-  border-radius: 50%;
-  background: repeating-conic-gradient(var(--knurl) 0 1.3deg, transparent 1.3deg 4deg);
-  -webkit-mask: radial-gradient(closest-side, transparent 70%, #000 71%);
-  mask: radial-gradient(closest-side, transparent 70%, #000 71%);
-}
-.knob-notch {
-  position: absolute;
-  top: 3px;
-  left: 50%;
-  width: 6px;
-  height: 15px;
-  margin-left: -3px;
-  border-radius: 3px;
-  background: var(--acc);
-}
 .knob-face {
   position: absolute;
-  inset: 30px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 28%, var(--knob-a), var(--knob-b) 70%);
-  box-shadow:
-    inset 0 2px 6px rgba(14, 64, 118, 0.2),
-    0 1px 0 rgba(255, 255, 255, 0.7);
   display: grid;
   place-items: center;
-  overflow: hidden;
 }
 .knob-readout {
   display: grid;
   justify-items: center;
+  gap: 6px;
   line-height: 1;
   color: var(--ink);
 }
 .knob-value {
-  font-size: 26px;
-  font-weight: 650;
-  letter-spacing: -0.03em;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .knob-unit {
-  margin-top: 5px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-2);
   white-space: nowrap;
@@ -303,7 +274,7 @@ kbd {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 2px solid var(--glass-bd);
+  border: 1.5px solid var(--disc-a);
   pointer-events: none;
 }
 
@@ -320,8 +291,8 @@ kbd {
   top: 0;
   translate: -50% -50%;
   border-radius: 50%;
-  border: 1.5px solid var(--track);
-  opacity: 0.45;
+  border: 1px solid var(--track);
+  opacity: 0.35;
   transition: opacity 0.45s var(--out);
 }
 .track-ring.is-on {
@@ -334,128 +305,93 @@ kbd {
   width: 0;
   height: 0;
   transform-origin: 0 0;
-  transition: filter 0.4s;
-}
-.ring > .node-item {
-  transition: none;
-}
-.ring:not(.is-live) .item-row {
-  filter: saturate(0.9);
 }
 .node {
   position: absolute;
   left: 0;
   top: 0;
 }
-
-.band {
-  position: absolute;
-  left: 0;
-  top: 0;
-  background: var(--glass-hi);
-  border: 1px solid var(--glass-bd);
-  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  z-index: 1;
-}
-.band.is-launching {
-  animation: band-pulse 0.64s var(--out);
-}
-@keyframes band-pulse {
-  0% {
-    box-shadow: var(--shadow), 0 0 0 0 rgba(255, 255, 255, 0.7);
-  }
-  100% {
-    box-shadow: var(--shadow), 0 0 0 22px rgba(255, 255, 255, 0);
-  }
-}
-
 .orbit {
   z-index: 2;
+}
+.orbit-cats {
+  transition: opacity 0.4s var(--out);
+}
+.orbit-cats.is-parked {
+  opacity: 0.6;
+}
+
+.reach {
+  position: absolute;
+  left: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--acc);
+  transform-origin: 0 50%;
+  z-index: 1;
+}
+.reach.is-launching {
+  animation: reach-pulse 0.62s var(--out);
+}
+@keyframes reach-pulse {
+  50% {
+    scale: 1 2.5;
+  }
 }
 
 .cat {
   position: absolute;
-  width: 100px;
-  height: 100px;
+  width: 72px;
+  height: 72px;
   translate: -50% -50%;
   display: grid;
   place-items: center;
 }
-.cat-disc {
-  position: absolute;
-  inset: 4px;
-}
-.cat-disc::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: var(--glass);
-  border: 1px solid var(--glass-bd);
-  opacity: 0;
-  transition: opacity 0.35s var(--out);
-}
-.cat.is-parked .cat-disc::before {
-  opacity: 1;
-}
 .cat-icon {
   display: grid;
   color: var(--ink);
-  position: relative;
 }
 .cat-label {
   position: absolute;
   top: 100%;
   left: 50%;
   translate: -50% 0;
-  margin-top: 4px;
+  margin-top: 2px;
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
 .item {
   position: absolute;
-  translate: -28px -50%;
+  translate: -22px -50%;
 }
 .item-row {
   display: flex;
   align-items: center;
   gap: 14px;
-  transform-origin: 28px 50%;
-  transition: opacity 0.4s;
+  transform-origin: 22px 50%;
 }
 .ring:not(.is-live) .item-row {
-  opacity: 0.6 !important;
+  opacity: 0.5 !important;
 }
-.item-chip {
-  position: relative;
-  width: 56px;
-  height: 56px;
+.item-icon {
+  width: 44px;
+  height: 44px;
   flex: none;
   display: grid;
   place-items: center;
   color: var(--ink);
-}
-.item-chip > svg {
-  position: relative;
-}
-.item-chip-bg {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: var(--glass-hi);
-  border: 1px solid var(--glass-bd);
 }
 .item-text {
   display: grid;
   gap: 3px;
 }
 .item-label {
-  font-size: 21px;
-  font-weight: 650;
-  letter-spacing: -0.02em;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
   white-space: nowrap;
 }
 .item-sub {
@@ -490,7 +426,7 @@ kbd {
 .preview-title {
   margin: 8px 0 12px;
   font-size: 38px;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.04;
   letter-spacing: -0.04em;
 }
@@ -501,10 +437,8 @@ kbd {
 }
 .preview-widget {
   margin-top: 26px;
-  padding: 18px;
-  border-radius: 22px;
-  background: var(--glass);
-  border: 1px solid var(--glass-bd);
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
 }
 .preview-cta {
   margin-top: auto;
@@ -600,7 +534,7 @@ kbd {
 /* ---------- app frame ---------- */
 .app {
   position: absolute;
-  left: 262px;
+  left: 250px;
   top: 92px;
   right: 30px;
   bottom: 70px;
@@ -650,10 +584,18 @@ kbd {
   left: 0;
   right: 0;
   top: 0;
-  border-radius: 20px;
+  border-radius: 18px;
   background: var(--glass-hi);
-  border: 1px solid var(--glass-bd);
-  box-shadow: var(--shadow);
+}
+.klist-focus::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--acc);
 }
 .krow {
   position: relative;
@@ -952,8 +894,6 @@ kbd {
   display: grid;
   place-items: center;
   color: var(--ink);
-  background: var(--glass);
-  border: 1px solid var(--glass-bd);
 }
 .ctl.is-primary {
   background: var(--ink);
@@ -967,7 +907,7 @@ kbd {
   width: 90px;
   height: 90px;
   border-radius: 50%;
-  border: 2.5px solid var(--ink);
+  border: 1.5px solid var(--ink);
   pointer-events: none;
   transition: border-color 0.2s;
 }
@@ -1127,7 +1067,7 @@ kbd {
   border-radius: 18px;
   font-size: 14px;
   color: var(--ink-2);
-  background: var(--glass);
+  background: transparent;
   border: 1px solid transparent;
   transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
 }
@@ -1140,8 +1080,6 @@ kbd {
 }
 .preset.is-on {
   background: var(--glass-hi);
-  border-color: var(--glass-bd);
-  box-shadow: var(--shadow);
 }
 
 /* ---------- trip ---------- */
@@ -1183,7 +1121,6 @@ kbd {
   padding: 18px 22px;
   border-radius: 22px;
   background: var(--glass);
-  border: 1px solid var(--glass-bd);
 }
 .tile.is-hero {
   grid-row: 1 / span 3;
@@ -1191,7 +1128,6 @@ kbd {
   flex-direction: column;
   justify-content: space-between;
   background: var(--glass-hi);
-  box-shadow: var(--shadow);
 }
 .tile-label {
   font-size: 14px;
@@ -1569,7 +1505,7 @@ kbd {
   .skel,
   .cp-pulse > span,
   .cp-orb,
-  .band.is-launching {
+  .reach.is-launching {
     animation: none;
   }
   .cp-pulse > span:first-child {

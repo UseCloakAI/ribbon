@@ -5,6 +5,7 @@ import { useAppKnob, useReadout } from '../lib/appContext.js'
 import { bus } from '../lib/bus.js'
 import { clamp, getState, setState, useStore } from '../lib/store.js'
 import { TRACKS, fmtTime } from '../data/media.js'
+import { sfx } from '../lib/sound.js'
 
 export function AlbumArt({ track, size = 236 }) {
   const h = track.hue
@@ -65,10 +66,12 @@ export default function NowPlaying({ icon }) {
       if (e.type === 'turn') {
         const v = clamp(getState().volume + e.dir * 2, 0, 100)
         if (v === getState().volume) bus.emit('bump', e.dir)
+        else sfx('value', v / 100)
         setState({ volume: v })
         return true
       }
       if (e.type === 'press' || e.type === 'back') {
+        sfx('release')
         setAdjust(false)
         return true
       }
@@ -82,6 +85,7 @@ export default function NowPlaying({ icon }) {
     }
     if (e.type === 'press') {
       const id = controls[focus].id
+      sfx(id === 'volume' ? 'grab' : id === 'play' ? (getState().playing ? 'toggleOff' : 'toggleOn') : 'select')
       if (id === 'prev') skip(-1)
       if (id === 'next') skip(1)
       if (id === 'play') setState({ playing: !getState().playing })

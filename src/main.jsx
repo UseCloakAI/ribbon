@@ -6,8 +6,10 @@ import '@fontsource-variable/geist-mono'
 import './styles.css'
 import App from './App.jsx'
 import { startMediaClock } from './lib/store.js'
+import { wireSound } from './lib/sound.js'
 
 startMediaClock()
+wireSound()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

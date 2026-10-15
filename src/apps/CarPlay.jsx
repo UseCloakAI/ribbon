@@ -6,6 +6,7 @@ import { setState, useStore } from '../lib/store.js'
 import { PHONES } from '../data/media.js'
 import { createBridge, STAGES } from '../carplay/bridge.js'
 import { C } from '../lib/geo.js'
+import { sfx } from '../lib/sound.js'
 
 const STEP_LABELS = { adapter: 'USB adapter', phone: 'iPhone', video: 'Video' }
 const ERRORS = {
@@ -30,9 +31,12 @@ export default function CarPlay() {
     const offs = [
       b.on('status', (st) => {
         if (st.stage === 'error') {
+          sfx('error')
           setError(st.reason)
           setState({ carplay: 'error' })
         } else {
+          if (st.stage === 'streaming') sfx('connected')
+          else if (st.stage !== 'adapter') sfx('step')
           setStage(st.stage)
           setState({ carplay: st.stage === 'streaming' ? 'streaming' : 'connecting' })
         }
@@ -57,6 +61,7 @@ export default function CarPlay() {
   useAppKnob((e) => {
     if (error) {
       if (e.type === 'press') {
+        sfx('select')
         setError(null)
         setStage('adapter')
         setAttempt((a) => a + 1)

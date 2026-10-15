@@ -3,6 +3,7 @@ import { useAppKnob, useReadout } from '../lib/appContext.js'
 import { bus } from '../lib/bus.js'
 import { getState, setState, useStore } from '../lib/store.js'
 import { STATIONS } from '../data/media.js'
+import { sfx } from '../lib/sound.js'
 
 const MIN = 87.5
 const MAX = 108.0
@@ -19,12 +20,17 @@ export default function Radio() {
     if (e.type === 'turn') {
       const f = +(getState().freq + e.dir * 0.1).toFixed(1)
       if (f < MIN || f > MAX) bus.emit('bump', e.dir)
-      else setState({ freq: f })
+      else {
+        const hit = STATIONS.some((st) => Math.abs(st.freq - f) < 0.05)
+        sfx(hit ? 'station' : 'tune', (f - MIN) / (MAX - MIN))
+        setState({ freq: f })
+      }
       return true
     }
     if (e.type === 'press') {
       const cur = getState().freq
       const next = STATIONS.find((st) => st.freq > cur + 0.05) ?? STATIONS[0]
+      sfx('station')
       setState({ freq: next.freq })
       return true
     }

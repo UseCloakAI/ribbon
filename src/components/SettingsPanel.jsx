@@ -4,6 +4,7 @@ import { useAppKnob, useReadout } from '../lib/appContext.js'
 import { bus } from '../lib/bus.js'
 import { clamp, setState, useStore } from '../lib/store.js'
 import KnobList from './KnobList.jsx'
+import { sfx } from '../lib/sound.js'
 
 // Shared knob pattern for settings: turn moves focus, press on a value
 // "grabs" it (the knob now adjusts it), press or back lets go.
@@ -33,16 +34,21 @@ export default function SettingsPanel({ rows, icon }) {
         if (row.type === 'range') {
           const v = clamp(+(s[row.key] + e.dir * row.step).toFixed(2), row.min, row.max)
           if (v === s[row.key]) bus.emit('bump', e.dir)
+          else sfx('value', (v - row.min) / (row.max - row.min))
           setState({ [row.key]: v })
         } else {
           const i = row.options.findIndex(([v]) => v === s[row.key])
           const n = i + e.dir
           if (n < 0 || n >= row.options.length) bus.emit('bump', e.dir)
-          else setState({ [row.key]: row.options[n][0] })
+          else {
+            sfx('value', n / Math.max(1, row.options.length - 1))
+            setState({ [row.key]: row.options[n][0] })
+          }
         }
         return true
       }
       if (e.type === 'press' || e.type === 'back') {
+        sfx('release')
         setAdjust(false)
         return true
       }
@@ -56,9 +62,16 @@ export default function SettingsPanel({ rows, icon }) {
       return true
     }
     if (e.type === 'press') {
-      if (row.type === 'range' || row.type === 'choice') setAdjust(true)
-      else if (row.type === 'toggle') setState({ [row.key]: !s[row.key] })
-      else if (row.type === 'action') row.run()
+      if (row.type === 'range' || row.type === 'choice') {
+        sfx('grab')
+        setAdjust(true)
+      } else if (row.type === 'toggle') {
+        sfx(s[row.key] ? 'toggleOff' : 'toggleOn')
+        setState({ [row.key]: !s[row.key] })
+      } else if (row.type === 'action') {
+        sfx('select')
+        row.run()
+      }
       else bus.emit('bump', 1)
       return true
     }
