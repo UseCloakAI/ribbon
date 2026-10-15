@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Pause, Play, SkipBack, SkipForward, SpeakerHigh } from '@phosphor-icons/react'
+import { Pause, Play, SkipBack, SkipForward, SpeakerHigh, Waveform } from '@phosphor-icons/react'
 import { useAppKnob, useReadout } from '../lib/appContext.js'
 import { bus } from '../lib/bus.js'
 import { clamp, getState, setState, useStore } from '../lib/store.js'
 import { TRACKS, fmtTime } from '../data/media.js'
 import { sfx } from '../lib/sound.js'
+import { seek, setScrubbing } from '../lib/player.js'
 import { EASE_IN } from '../lib/motion.js'
 
 export function AlbumArt({ track, size = 236 }) {
@@ -43,7 +44,9 @@ export default function NowPlaying({ icon }) {
   const position = useStore((s) => s.position)
   const volume = useStore((s) => s.volume)
   const [focus, setFocus] = useState(1)
-  const [adjust, setAdjust] = useState(false)
+  const [adjust, setAdjust] = useState(null) // null | 'volume' | 'scrub'
+  const [scrubT, setScrubT] = useState(0)
+  const lastTurn = useRef(0)
   const [dir, setDir] = useState(1)
   const track = TRACKS[trackIdx]
 
@@ -52,7 +55,9 @@ export default function NowPlaying({ icon }) {
     { id: 'play', icon: playing ? Pause : Play, label: playing ? 'Pause' : 'Play' },
     { id: 'next', icon: SkipForward, label: 'Next' },
     { id: 'volume', icon: SpeakerHigh, label: 'Volume' },
+    { id: 'scrub', icon: Waveform, label: 'Scrub' },
   ]
+  const shown = adjust === 'scrub' ? scrubT : position
 
   const skip = (d) => {
     const s = getState()
@@ -61,9 +66,43 @@ export default function NowPlaying({ icon }) {
     setState({ track: (s.track + d + TRACKS.length) % TRACKS.length, position: 0, playing: true })
   }
 
-  useReadout(adjust ? { key: 'vol', value: volume, unit: 'volume' } : { key: `np-${focus}`, icon: controls[focus].icon })
+  useReadout(
+    adjust === 'volume'
+      ? { key: 'vol', value: volume, unit: 'volume' }
+      : adjust === 'scrub'
+        ? { key: 'scrub', value: fmtTime(scrubT), unit: 'scrub' }
+        : { key: `np-${focus}`, icon: controls[focus].icon },
+  )
+
+  useEffect(() => () => setScrubbing(false), [])
+
+  const endScrub = () => {
+    setScrubbing(false)
+    setAdjust(null)
+  }
 
   useAppKnob((e) => {
+    if (adjust === 'scrub') {
+      if (e.type === 'turn') {
+        // quick turns cover more ground: 2s per notch, up to 8s when spinning
+        const now = performance.now()
+        const gap = now - lastTurn.current
+        lastTurn.current = now
+        const step = gap < 60 ? 8 : gap < 120 ? 5 : 2
+        const t = clamp(scrubT + e.dir * step, 0, track.length - 1)
+        if (t === scrubT) bus.emit('bump', e.dir)
+        else sfx('tune', t / track.length)
+        setScrubT(t)
+        seek(t)
+        return true
+      }
+      if (e.type === 'press' || e.type === 'back' || e.type === 'home') {
+        sfx('release')
+        endScrub()
+        return e.type !== 'home'
+      }
+      return false
+    }
     if (adjust) {
       if (e.type === 'turn') {
         const v = clamp(getState().volume + e.dir * 2, 0, 100)
@@ -74,7 +113,7 @@ export default function NowPlaying({ icon }) {
       }
       if (e.type === 'press' || e.type === 'back') {
         sfx('release')
-        setAdjust(false)
+        setAdjust(null)
         return true
       }
       return false
@@ -87,11 +126,16 @@ export default function NowPlaying({ icon }) {
     }
     if (e.type === 'press') {
       const id = controls[focus].id
-      sfx(id === 'volume' ? 'grab' : id === 'play' ? (getState().playing ? 'toggleOff' : 'toggleOn') : 'select')
+      sfx(id === 'volume' || id === 'scrub' ? 'grab' : id === 'play' ? (getState().playing ? 'toggleOff' : 'toggleOn') : 'select')
       if (id === 'prev') skip(-1)
       if (id === 'next') skip(1)
       if (id === 'play') setState({ playing: !getState().playing })
-      if (id === 'volume') setAdjust(true)
+      if (id === 'volume') setAdjust('volume')
+      if (id === 'scrub') {
+        setScrubT(getState().position)
+        setScrubbing(true)
+        setAdjust('scrub')
+      }
       return true
     }
     return false
@@ -130,23 +174,28 @@ export default function NowPlaying({ icon }) {
           </motion.div>
         </AnimatePresence>
         <div className="np-progress">
-          <div className="scrub">
+          <div className={`scrub ${adjust === 'scrub' ? 'is-scrubbing' : ''}`}>
             <motion.span
               className="scrub-fill"
-              animate={{ scaleX: position / track.length }}
-              transition={{ duration: 0.9, ease: 'linear' }}
+              animate={{ scaleX: shown / track.length }}
+              transition={adjust === 'scrub' ? { type: 'spring', stiffness: 500, damping: 40 } : { duration: 0.9, ease: 'linear' }}
+            />
+            <motion.span
+              className="scrub-thumb"
+              animate={{ left: `${(shown / track.length) * 100}%`, scale: adjust === 'scrub' ? 1 : 0, opacity: adjust === 'scrub' ? 1 : 0 }}
+              transition={{ left: adjust === 'scrub' ? { type: 'spring', stiffness: 500, damping: 40 } : { duration: 0.9, ease: 'linear' }, scale: { type: 'spring', stiffness: 500, damping: 28 }, opacity: { duration: 0.15 } }}
             />
           </div>
           <div className="np-times">
-            <span>{fmtTime(position)}</span>
+            <span>{fmtTime(shown)}</span>
             <Bars playing={playing} />
-            <span>-{fmtTime(track.length - position)}</span>
+            <span>-{fmtTime(track.length - shown)}</span>
           </div>
         </div>
         <div className="np-controls">
           <motion.span
             className={`ctl-ring ${adjust ? 'is-grabbed' : ''}`}
-            animate={{ x: focus * 94 }}
+            animate={{ x: focus * 86 }}
             transition={{ type: 'spring', stiffness: 420, damping: 32 }}
           />
           {controls.map((c, i) => (

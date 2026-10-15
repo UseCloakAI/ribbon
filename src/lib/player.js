@@ -84,6 +84,43 @@ function tryPlay() {
 }
 
 let loaded = -1
+let volTarget = 1
+let duck = 1 // drops while scrubbing so jumps don't blare
+let ramping = false
+
+// glide audio.volume to its target instead of stepping it
+function rampVolume() {
+  if (ramping) return
+  ramping = true
+  const step = () => {
+    const goal = volTarget * duck
+    const v = audio.volume + (goal - audio.volume) * 0.25
+    audio.volume = Math.abs(goal - v) < 0.003 ? goal : v
+    if (audio.volume !== goal) requestAnimationFrame(step)
+    else ramping = false
+  }
+  requestAnimationFrame(step)
+}
+
+// Scrubbing: the song keeps playing from wherever the knob drops it,
+// ducked, like dragging a tape past the head. Seeks are coalesced to one
+// per frame so fast turns never queue up.
+let seekTo = null
+export function seek(t) {
+  const first = seekTo === null
+  seekTo = t
+  if (!first) return
+  requestAnimationFrame(() => {
+    if (seekTo === null) return
+    audio.currentTime = seekTo
+    setState({ position: Math.floor(seekTo) })
+    seekTo = null
+  })
+}
+export function setScrubbing(on) {
+  duck = on ? 0.4 : 1
+  rampVolume()
+}
 function sync() {
   const s = getState()
   const t = TRACKS[s.track]
@@ -95,7 +132,8 @@ function sync() {
   } else if (Math.abs(audio.currentTime - s.position) > 2) {
     audio.currentTime = s.position // a seek from the UI (e.g. previous restarts)
   }
-  audio.volume = Math.pow(s.volume / 100, 1.6)
+  volTarget = Math.pow(s.volume / 100, 1.6)
+  rampVolume()
   if (s.playing && audio.paused) tryPlay()
   if (!s.playing && !audio.paused) audio.pause()
 }

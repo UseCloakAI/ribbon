@@ -768,7 +768,25 @@ img.track-art {
   overflow: hidden;
   background: var(--line);
 }
+.scrub {
+  position: relative;
+  overflow: visible !important;
+  transition: height 0.2s var(--out);
+}
+.scrub.is-scrubbing {
+  height: 6px;
+}
+.scrub-thumb {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  background: var(--acc);
+}
 .scrub-fill {
+  border-radius: inherit;
   display: block;
   height: 100%;
   background: var(--ink);
@@ -786,7 +804,7 @@ img.track-art {
 .np-controls {
   position: relative;
   display: flex;
-  gap: 18px;
+  gap: 10px;
   margin-top: 34px;
 }
 .ctl {
