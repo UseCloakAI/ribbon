@@ -12,11 +12,13 @@ const image = (src) =>
     i.onload = i.onerror = () => res()
     i.src = src
   })
+// resolves with the duration in seconds (0 if it can't be read)
 const metadata = (src) =>
   new Promise((res) => {
     const a = new Audio()
     a.preload = 'metadata'
-    a.onloadedmetadata = a.onerror = () => res()
+    a.onloadedmetadata = () => res(a.duration || 0)
+    a.onerror = () => res(0)
     a.src = src
   })
 const capped = (p, ms) => Promise.race([p, new Promise((res) => setTimeout(res, ms))])
@@ -24,7 +26,14 @@ const capped = (p, ms) => Promise.race([p, new Promise((res) => setTimeout(res, 
 export const JOBS = [
   { label: 'Loading fonts', run: () => document.fonts?.ready },
   { label: 'Preparing sounds', run: () => soundsReady() },
-  { label: 'Loading library', run: () => Promise.all([metadata(TRACKS[0].src), ...TRACKS.filter((t) => t.art).map((t) => image(t.art))]) },
+  {
+    label: 'Loading library',
+    run: () =>
+      Promise.all([
+        ...TRACKS.map((t) => metadata(t.src).then((d) => d && (t.length = d))),
+        ...TRACKS.filter((t) => t.art).map((t) => image(t.art)),
+      ]),
+  },
   { label: 'Loading videos', run: () => Promise.all(VIDEOS.map((v) => image(v.poster))) },
   { label: 'Looking for iPhone', run: () => navigator.usb?.getDevices?.().catch(() => {}) },
 ]

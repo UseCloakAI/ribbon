@@ -34,7 +34,8 @@ let state = {
   playing: true,
   position: 0,
   carplay: 'idle',
-  videoFull: false, // idle | connecting | streaming | error
+  videoFull: false,
+  stemsOn: {}, // { [trackId]: { [stemName]: bool } } // idle | connecting | streaming | error
   toast: null,
   bootKey: 0,
 }

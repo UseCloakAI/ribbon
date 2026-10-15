@@ -49,6 +49,22 @@ One identity across the app (`src/lib/motion.js`): premium and calm. A signature
 - Launching: the loader fills the circle's rim, the chosen item inhales then swells while the others step back, and its name flies on an arc off the ring into the app title as home recedes and the body rises in. Closing runs the arc back.
 - CarPlay: the circle itself grows until it is the screen, and shrinks back into the circle on exit.
 
+## Music and stems
+
+The library is built from the `music/` folder; nothing about songs lives in code. One folder per song:
+
+```
+music/
+  Thank The Lord I'm Freed/
+    Thank The Lord I'm Freed.mp3   main mix (same name as the folder)
+    drums.mp3                      a stem, shown as "drums"
+    click.mp3                      another stem, shown as "click"
+    cover.jpg                      artwork (optional)
+    info.json                      { "artist", "album", "order", "hue" } (optional)
+```
+
+Any other audio file in a folder (mp3, m4a, wav, ogg, opus, flac) becomes a toggleable stem named after the file. Stems play locked in sync with the main mix and start off; in Now Playing, turn past Scrub to reach the switches (Mix plus one per stem) and press to fade a part in or out. Turning Mix off plays only the stems. Lengths are read from the files at startup. Add or remove files and rebuild (the dev server picks them up live).
+
 ## Sound
 
 All sound is synthesized (`src/lib/sound.js`), then pre-rendered once at startup through an `OfflineAudioContext` into stereo buffers, so playback is a single buffer per sound and costs almost nothing on a Pi. Voices are two-operator FM (glass bells, kalimba plucks), shaped noise, and a detuned saw pad, all through a stereo convolution room with early reflections and a damped tail. Each sound is peak-normalized to its own target, so the knob's constant companions sit quietest and the moments sit fullest.

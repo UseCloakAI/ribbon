@@ -1582,3 +1582,46 @@ img.track-art {
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- stems ---------- */
+.stems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 30px;
+}
+.stem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--ink-2);
+  background: var(--glass);
+  border: 1.5px solid transparent;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+.stem.is-on {
+  color: var(--ink);
+  background: var(--glass-hi);
+}
+.stem.is-focus {
+  border-color: var(--ink);
+}
+.stem-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: grid;
+  place-items: center;
+}
+.stem-dot > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--acc);
+}

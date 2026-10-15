@@ -6,9 +6,9 @@ import { bus } from '../lib/bus.js'
 import { clamp, getState, setState, useStore } from '../lib/store.js'
 import { TRACKS, fmtTime } from '../data/media.js'
 import { sfx } from '../lib/sound.js'
-import { seek, setScrubbing } from '../lib/player.js'
+import { MIX, seek, setScrubbing, stemOn, toggleStem } from '../lib/player.js'
 import { useShared } from '../lib/shared.js'
-import { EASE_IN } from '../lib/motion.js'
+import { EASE, EASE_IN } from '../lib/motion.js'
 
 export function AlbumArt({ track, size = 236 }) {
   const h = track.hue
@@ -61,6 +61,18 @@ export default function NowPlaying({ icon }) {
     { id: 'scrub', icon: Waveform, label: 'Scrub' },
   ]
   const shown = adjust === 'scrub' ? scrubT : position
+  const len = track.length || 1
+
+  // Stems: one switch per stem file in the song's folder, plus the main mix.
+  // The knob carries on from the controls into this row.
+  const stemsOn = useStore((s) => s.stemsOn)
+  const stemNames = track.stems?.length ? [MIX, ...track.stems.map((x) => x.name)] : []
+  const total = controls.length + stemNames.length
+  const f = Math.min(focus, total - 1)
+  const inStems = f >= controls.length
+  const stemFocus = f - controls.length
+  const isOn = (name) => stemOn({ stemsOn }, track, name)
+  const stemLabel = (name) => (name === MIX ? 'Mix' : name)
 
   const skip = (d) => {
     const s = getState()
@@ -70,11 +82,13 @@ export default function NowPlaying({ icon }) {
   }
 
   useReadout(
-    adjust === 'volume'
+    inStems && !adjust
+      ? { key: `stem-${stemNames[stemFocus]}`, value: isOn(stemNames[stemFocus]) ? 'On' : 'Off', unit: stemLabel(stemNames[stemFocus]) }
+      : adjust === 'volume'
       ? { key: 'vol', value: volume, unit: 'volume' }
       : adjust === 'scrub'
         ? { key: 'scrub', value: fmtTime(scrubT), unit: 'scrub' }
-        : { key: `np-${focus}`, icon: controls[focus].icon },
+        : { key: `np-${f}`, icon: controls[f].icon },
   )
 
   useEffect(() => () => setScrubbing(false), [])
@@ -92,9 +106,9 @@ export default function NowPlaying({ icon }) {
         const gap = now - lastTurn.current
         lastTurn.current = now
         const step = gap < 60 ? 8 : gap < 120 ? 5 : 2
-        const t = clamp(scrubT + e.dir * step, 0, track.length - 1)
+        const t = clamp(scrubT + e.dir * step, 0, len - 1)
         if (t === scrubT) bus.emit('bump', e.dir)
-        else sfx('tune', t / track.length)
+        else sfx('tune', t / len)
         setScrubT(t)
         seek(t)
         return true
@@ -122,13 +136,18 @@ export default function NowPlaying({ icon }) {
       return false
     }
     if (e.type === 'turn') {
-      const n = focus + e.dir
-      if (n < 0 || n >= controls.length) bus.emit('bump', e.dir)
+      const n = f + e.dir
+      if (n < 0 || n >= total) bus.emit('bump', e.dir)
       else setFocus(n)
       return true
     }
+    if (e.type === 'press' && inStems) {
+      const on = toggleStem(track, stemNames[stemFocus])
+      sfx(on ? 'toggleOn' : 'toggleOff')
+      return true
+    }
     if (e.type === 'press') {
-      const id = controls[focus].id
+      const id = controls[f].id
       sfx(id === 'volume' || id === 'scrub' ? 'grab' : id === 'play' ? (getState().playing ? 'toggleOff' : 'toggleOn') : 'select')
       if (id === 'prev') skip(-1)
       if (id === 'next') skip(1)
@@ -182,33 +201,51 @@ export default function NowPlaying({ icon }) {
           <div className={`scrub ${adjust === 'scrub' ? 'is-scrubbing' : ''}`}>
             <motion.span
               className="scrub-fill"
-              animate={{ scaleX: shown / track.length }}
+              animate={{ scaleX: shown / len }}
               transition={adjust === 'scrub' ? { type: 'spring', stiffness: 500, damping: 40 } : { duration: 0.9, ease: 'linear' }}
             />
             <motion.span
               className="scrub-thumb"
-              animate={{ left: `${(shown / track.length) * 100}%`, scale: adjust === 'scrub' ? 1 : 0, opacity: adjust === 'scrub' ? 1 : 0 }}
+              animate={{ left: `${(shown / len) * 100}%`, scale: adjust === 'scrub' ? 1 : 0, opacity: adjust === 'scrub' ? 1 : 0 }}
               transition={{ left: adjust === 'scrub' ? { type: 'spring', stiffness: 500, damping: 40 } : { duration: 0.9, ease: 'linear' }, scale: { type: 'spring', stiffness: 500, damping: 28 }, opacity: { duration: 0.15 } }}
             />
           </div>
           <div className="np-times">
             <span>{fmtTime(shown)}</span>
-            <span>-{fmtTime(track.length - shown)}</span>
+            <span>-{fmtTime(len - shown)}</span>
           </div>
         </div>
         <div className="np-controls">
           <motion.span
             className={`ctl-ring ${adjust ? 'is-grabbed' : ''}`}
-            animate={{ x: focus * 86 }}
+            animate={{ x: Math.min(f, controls.length - 1) * 86, opacity: inStems ? 0 : 1, scale: inStems ? 0.8 : 1 }}
             transition={{ type: 'spring', stiffness: 420, damping: 32 }}
           />
           {controls.map((c, i) => (
-            <div key={c.id} className={`ctl ${i === focus ? 'is-focus' : ''} ${c.id === 'play' ? 'is-primary' : ''} ${i === focus && adjust ? 'is-grabbed' : ''}`}>
+            <div key={c.id} className={`ctl ${i === f ? 'is-focus' : ''} ${c.id === 'play' ? 'is-primary' : ''} ${i === f && adjust ? 'is-grabbed' : ''}`}>
               <c.icon size={c.id === 'play' ? 34 : 26} weight="fill" aria-label={c.label} />
               {c.id === 'volume' && <span className="ctl-vol">{volume}</span>}
             </div>
           ))}
         </div>
+        {stemNames.length > 0 && (
+          <div className="stems" aria-label="Stems">
+            {stemNames.map((name, i) => (
+              <motion.div
+                key={`${track.id}-${name}`}
+                className={`stem ${isOn(name) ? 'is-on' : ''} ${inStems && i === stemFocus ? 'is-focus' : ''}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: EASE, delay: i * 0.035 }}
+              >
+                <span className="stem-dot">
+                  <motion.span animate={{ scale: isOn(name) ? 1 : 0 }} transition={{ type: 'spring', stiffness: 500, damping: 26 }} />
+                </span>
+                {stemLabel(name)}
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

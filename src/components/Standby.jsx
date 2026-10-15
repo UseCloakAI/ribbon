@@ -62,7 +62,7 @@ export default function Standby() {
           <span>{t.artist}</span>
           <div className="sb-np-progress">
             <div className="scrub">
-              <motion.span className="scrub-fill" animate={{ scaleX: position / t.length }} transition={{ duration: 0.9, ease: 'linear' }} />
+              <motion.span className="scrub-fill" animate={{ scaleX: position / (t.length || 1) }} transition={{ duration: 0.9, ease: 'linear' }} />
             </div>
             <span className="sb-np-time">
               <Bars playing={playing} count={4} /> {fmtTime(position)} / {fmtTime(t.length)}

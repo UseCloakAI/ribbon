@@ -1,7 +1,13 @@
-// Real playback. One <audio> element follows the store (track, playing,
-// position, volume) and reports time back. An analyser on it gives the wave
-// a heavily smoothed loudness, so the sky moves with the song without
-// twitching on every beat.
+// Real playback. The main <audio> element follows the store (track, playing,
+// position, volume) and reports time back. A song's stems are extra <audio>
+// elements kept locked to the main one. Everything meets on one mix bus:
+//
+//   main  -> mixGain  \
+//   stem  -> stemGain  > mix -> analyser (waves, tempo) -> master (volume) -> out
+//   stem  -> stemGain /
+//
+// Toggling a stem (or the main mix) ramps its gain, so parts fade in and
+// out instead of clicking. Stems are off until switched on.
 import { TRACKS } from '../data/media.js'
 import { getState, setState, subscribe } from './store.js'
 
@@ -11,18 +17,96 @@ let analyser = null
 let bins = null
 let level = 0
 
+let mix = null
+let master = null
+let mainGain = null
+let stems = [] // [{ name, el, gain, src }]
+
 function graph() {
   if (analyser) return
   const AC = window.AudioContext || window.webkitAudioContext
   if (!AC) return
   const ctx = new AC()
-  const src = ctx.createMediaElementSource(audio)
+  mix = ctx.createGain()
+  master = ctx.createGain()
+  mainGain = ctx.createGain()
   analyser = ctx.createAnalyser()
   analyser.fftSize = 1024
   analyser.smoothingTimeConstant = 0.7
   bins = new Uint8Array(analyser.frequencyBinCount)
-  src.connect(analyser).connect(ctx.destination)
+  ctx.createMediaElementSource(audio).connect(mainGain).connect(mix)
+  mix.connect(analyser).connect(master).connect(ctx.destination)
   graph.ctx = ctx
+  buildStems() // the first track's stems, now that there is a graph
+  applyVolume()
+}
+
+// ---- stems ----
+const STEM_FADE = 0.08 // seconds, time constant of a toggle fade
+
+const stemKey = (t) => t?.id
+export function stemOn(state, track, name) {
+  const v = state.stemsOn?.[stemKey(track)]?.[name]
+  return v ?? name === MIX // the main mix starts on, stems start off
+}
+export const MIX = '__mix'
+
+export function toggleStem(track, name) {
+  const s = getState()
+  const k = stemKey(track)
+  const cur = { ...(s.stemsOn?.[k] ?? {}) }
+  cur[name] = !stemOn(s, track, name)
+  setState({ stemsOn: { ...(s.stemsOn ?? {}), [k]: cur } })
+  return cur[name]
+}
+
+function applyStemGains() {
+  if (!graph.ctx) return
+  const s = getState()
+  const t = TRACKS[s.track]
+  const now = graph.ctx.currentTime
+  mainGain.gain.setTargetAtTime(stemOn(s, t, MIX) ? 1 : 0, now, STEM_FADE)
+  for (const st of stems) st.gain.gain.setTargetAtTime(stemOn(s, t, st.name) ? 1 : 0, now, STEM_FADE)
+}
+
+function clearStems() {
+  for (const st of stems) {
+    st.el.pause()
+    st.el.removeAttribute('src')
+    st.el.load()
+    st.src.disconnect()
+    st.gain.disconnect()
+  }
+  stems = []
+}
+
+function buildStems() {
+  clearStems()
+  const t = TRACKS[getState().track]
+  if (!graph.ctx || !t?.stems?.length) return
+  const ctx = graph.ctx
+  const s = getState()
+  stems = t.stems.map(({ name, src }) => {
+    const el = new Audio(src)
+    el.preload = 'auto'
+    el.currentTime = audio.currentTime || 0
+    const gain = ctx.createGain()
+    gain.gain.value = stemOn(s, t, name) ? 1 : 0
+    const node = ctx.createMediaElementSource(el)
+    node.connect(gain).connect(mix)
+    el.addEventListener('error', () => {}) // a broken stem just stays silent
+    if (!audio.paused) el.play().catch(() => {})
+    return { name, el, gain, src: node }
+  })
+}
+
+// keep stems locked to the main mix (they drift a little on their own)
+function lockStems() {
+  const t = audio.currentTime
+  for (const st of stems) {
+    if (Math.abs(st.el.currentTime - t) > 0.06) st.el.currentTime = t
+    if (audio.paused !== st.el.paused) audio.paused ? st.el.pause() : st.el.play().catch(() => {})
+  }
 }
 
 let bassAvg = 0
@@ -168,8 +252,13 @@ let volTarget = 1
 let duck = 1 // drops while scrubbing so jumps don't blare
 let ramping = false
 
-// glide audio.volume to its target instead of stepping it
+// glide the master volume to its target instead of stepping it (on the
+// master gain once the graph exists, so stems follow it too)
+function applyVolume() {
+  if (master) master.gain.setTargetAtTime(volTarget * duck, graph.ctx.currentTime, 0.06)
+}
 function rampVolume() {
+  if (master) return applyVolume()
   if (ramping) return
   ramping = true
   const step = () => {
@@ -193,6 +282,7 @@ export function seek(t) {
   requestAnimationFrame(() => {
     if (seekTo === null) return
     audio.currentTime = seekTo
+    for (const st of stems) st.el.currentTime = seekTo
     setState({ position: Math.floor(seekTo) })
     seekTo = null
   })
@@ -211,19 +301,29 @@ function sync() {
     onsets.length = 0
     audio.src = t.src
     audio.currentTime = s.position || 0
+    buildStems()
   } else if (Math.abs(audio.currentTime - s.position) > 2) {
     audio.currentTime = s.position // a seek from the UI (e.g. previous restarts)
+    for (const st of stems) st.el.currentTime = s.position
   }
   volTarget = Math.pow(s.volume / 100, 1.6)
   rampVolume()
   if (s.playing && audio.paused) tryPlay()
   if (!s.playing && !audio.paused) audio.pause()
+  applyStemGains()
 }
 
 export function startPlayer() {
   audio.addEventListener('timeupdate', () => {
     const p = Math.floor(audio.currentTime)
     if (p !== getState().position) setState({ position: p })
+  })
+  audio.addEventListener('timeupdate', lockStems)
+  audio.addEventListener('play', lockStems)
+  audio.addEventListener('pause', lockStems)
+  audio.addEventListener('loadedmetadata', () => {
+    const t = TRACKS[getState().track]
+    if (t && audio.duration) t.length = audio.duration
   })
   audio.addEventListener('ended', () => setState({ track: (getState().track + 1) % TRACKS.length, position: 0 }))
   audio.addEventListener('error', () => setState({ playing: false }))
