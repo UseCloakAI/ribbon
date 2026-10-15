@@ -8,6 +8,7 @@ import StatusBar from './components/StatusBar.jsx'
 import Hints from './components/Hints.jsx'
 import Toast from './components/Toast.jsx'
 import Preview from './components/Preview.jsx'
+import Standby from './components/Standby.jsx'
 import AppFrame from './components/AppFrame.jsx'
 import { useOrbit, OrbitNode, CategoryNode, ItemNode } from './components/Orbit.jsx'
 import CarPlay from './apps/CarPlay.jsx'
@@ -41,17 +42,19 @@ export default function App() {
   const [turnDir, setTurnDir] = useState(1)
   const [app, setApp] = useState(null)
   const [launching, setLaunching] = useState(null)
+  const [standby, setStandby] = useState(false)
   const [readout, setReadout] = useState(null)
   const appHandler = useRef(null)
   const launchTimer = useRef(null)
 
   const st = useRef()
-  st.current = { booting, layer, cat, items, app, launching }
+  st.current = { booting, layer, cat, items, app, launching, standby }
 
   // Settings > About > Replay startup
   useEffect(() => {
     if (!bootKey) return
     setApp(null)
+    setStandby(false)
     setLayer('cats')
     setEntering(true)
     setBooting(true)
@@ -86,6 +89,12 @@ export default function App() {
       return
     }
     if (s.launching) return
+    // standby: any knob input wakes back to home
+    if (s.standby) {
+      sfx('enter')
+      setStandby(false)
+      return
+    }
     if (s.app) {
       if (appHandler.current?.(e)) return
       if (e.type === 'back' || e.type === 'home') {
@@ -119,7 +128,11 @@ export default function App() {
       if (s.layer === 'items') {
         sfx('back')
         setLayer('cats')
-      } else bus.emit('bump', -1)
+      } else {
+        // back out of the top of home: standby
+        sfx('close')
+        setStandby(true)
+      }
     } else if (e.type === 'home') {
       setLayer('cats')
     }
@@ -156,10 +169,10 @@ export default function App() {
         <div className="stage" style={{ width, transform: `translate(-50%, -50%) scale(${scale})` }}>
           {!booting && (
             <>
-              <AnimatePresence>{!fullscreen && !videoFull && <StatusBar key="status" entering={entering} />}</AnimatePresence>
+              <AnimatePresence>{!fullscreen && !videoFull && !standby && <StatusBar key="status" entering={entering} />}</AnimatePresence>
 
               <AnimatePresence>
-                {!app && (
+                {!app && !standby && (
                   <Home
                     key="home"
                     layer={layer}
@@ -184,13 +197,14 @@ export default function App() {
               <Knob
                 readout={app ? readout : null}
                 loading={!!launching}
-                hidden={fullscreen || videoFull}
+                hidden={fullscreen || videoFull || standby}
                 entering={entering}
               />
 
               <AnimatePresence>{fullscreen && <CarPlay key="carplay" />}</AnimatePresence>
 
-              <Hints context={fullscreen || videoFull ? null : hintContext} />
+              <Hints context={fullscreen || videoFull ? null : standby ? 'standby' : hintContext} />
+              <AnimatePresence>{standby && <Standby key="standby" />}</AnimatePresence>
               <Toast />
             </>
           )}

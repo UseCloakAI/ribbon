@@ -313,6 +313,11 @@ async function renderOne(name) {
 
 const waiters = new Map()
 // Resolves when one sound is rendered (the startup waits on its own sound).
+// Resolves once every sound in the palette is rendered.
+export function soundsReady() {
+  return prerender()
+}
+
 export function whenReady(name) {
   prerender()
   if (buffers.has(name)) return Promise.resolve()

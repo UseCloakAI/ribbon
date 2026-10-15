@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'motion/react'
 import { bus } from '../lib/bus.js'
 import { useReducedMotionPref } from '../lib/hooks.js'
 import { audioLocked, sfx, whenReady } from '../lib/sound.js'
+import { JOBS, runStartup } from '../lib/startup.js'
 import { EASE, EASE_IN, EASE_IO } from '../lib/motion.js'
 
 const WORD = 'ribbon'.split('')
-const STEPS = ['Waking up', 'Loading library', 'Looking for iPhone', 'Ready']
 
 // A thread that is straight, then becomes the wave. Same command structure
 // so the path can morph between them.
@@ -27,13 +27,19 @@ const GLINTS = [
 //   0.60s    dawn spreads out from the thread, the thread bends into a wave
 //   0.75s    the live wave sweeps in and takes over; glints ride the bell notes
 //   1.15s    on the chime, the wordmark rises out of the horizon line
-//   1.75s    a short load runs under it
-//   3.40s    the word lifts away and hands off to the circle
+//   1.75s    the load shows the real startup jobs as they finish
+//   ready    once every job is done (and no sooner than ~3.4s), "Ready"
+//            holds a beat, then the word lifts away to the circle
 export default function Boot({ onDone }) {
   const reduced = useReducedMotionPref()
   const [standby] = useState(() => audioLocked())
   const [phase, setPhase] = useState(standby ? -1 : 0)
-  const [step, setStep] = useState(0)
+  // real startup jobs: the line fills as they finish, the label names the
+  // one still running
+  const [done, setDone] = useState(() => JOBS.map(() => false))
+  const doneCount = done.filter(Boolean).length
+  const pending = JOBS.find((_, i) => !done[i])
+  const label = pending ? pending.label : 'Ready'
   const [glints, setGlints] = useState([])
 
   useEffect(() => {
@@ -43,6 +49,20 @@ export default function Boot({ onDone }) {
     let started = false
     let finished = false
     let revealed = false
+    let jobsDone = false
+    let introDone = false
+    // ready = every job finished and the intro has played its part; "Ready"
+    // holds for a beat so it can be read, then the hand-off runs
+    const maybeFinish = () => {
+      if (jobsDone && introDone) at(420, finish)
+    }
+    runStartup((flags) => {
+      setDone(flags)
+      if (!jobsDone && flags.every(Boolean)) {
+        jobsDone = true
+        maybeFinish()
+      }
+    })
     const reveal = () => {
       if (revealed) return
       revealed = true
@@ -68,10 +88,11 @@ export default function Boot({ onDone }) {
         sfx('chime')
       })
       at(1750, () => setPhase(3))
-      at(2100, () => setStep(1))
-      at(2500, () => setStep(2))
-      at(2950, () => setStep(3))
-      at(3400, finish)
+      at(2980, () => {
+        introDone = true
+        maybeFinish()
+      })
+      at(10000, finish) // never hang on a stuck job
     }
     // From standby any key (or a tap) starts it; once running, press skips.
     const off = bus.on('boot:key', (e) => {
@@ -191,20 +212,20 @@ export default function Boot({ onDone }) {
                 <div className="boot-line">
                   <motion.span
                     initial={{ scaleX: 0 }}
-                    animate={{ scaleX: on(3) ? (step + 1) / STEPS.length : 0 }}
+                    animate={{ scaleX: on(3) ? doneCount / JOBS.length : 0 }}
                     transition={{ duration: 0.5, ease: EASE }}
                   />
                 </div>
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
-                    key={step}
+                    key={label}
                     className="boot-step"
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6, transition: { duration: 0.12, ease: EASE_IN } }}
                     transition={{ duration: 0.28, ease: EASE }}
                   >
-                    {STEPS[step]}
+                    {label}
                   </motion.span>
                 </AnimatePresence>
               </motion.div>

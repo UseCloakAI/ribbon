@@ -6,6 +6,7 @@ import { EASE } from '../lib/motion.js'
 const SETS = {
   cats: [['← →', 'turn'], ['enter', 'open'], ['esc', 'back']],
   items: [['← →', 'turn'], ['enter', 'launch'], ['esc', 'back']],
+  standby: [['any key', 'home']],
   app: [['← →', 'turn'], ['enter', 'press'], ['esc', 'back'], ['hold esc', 'home']],
 }
 

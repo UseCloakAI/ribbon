@@ -1,5 +1,6 @@
 import { motion } from 'motion/react'
 import { useClock } from '../lib/hooks.js'
+import Shared from './Shared.jsx'
 import { EASE } from '../lib/motion.js'
 
 const fmt = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
@@ -17,11 +18,11 @@ export default function StatusBar({ entering }) {
     >
       <div className="status-right">
         <div className="clock">
-          <span className="clock-time">
+          <Shared id="clock" className="clock-time">
             {h}
             <span className="clock-colon">:</span>
             {m}
-          </span>
+          </Shared>
           <span className="clock-date">{fmt.format(now)}</span>
         </div>
       </div>
