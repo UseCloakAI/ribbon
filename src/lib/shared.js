@@ -45,6 +45,12 @@ const SIG = (x) => {
 const shape = (el) => (el.matches('.art, .track-art') ? el : el.querySelector('.art, .track-art')) ?? el
 const radiusOf = (el) => parseFloat(getComputedStyle(shape(el)).borderTopLeftRadius) || 0
 
+// "rgba(8, 44, 92, 0.6) 0px 30px 50px -22px" -> { c, v: [x, y, blur, spread] }
+function shadowOf(el) {
+  const m = getComputedStyle(shape(el)).boxShadow.match(/(rgba?\([^)]*\))\s+(-?[\d.]+)px\s+(-?[\d.]+)px\s+(-?[\d.]+)px\s+(-?[\d.]+)px/)
+  return m ? { c: m[1], v: [+m[2], +m[3], +m[4], +m[5]] } : null
+}
+
 // A clone moved to the stage loses styles that came from its old context
 // (e.g. `.pv-np b` font size, `.pv-np .art` radius), so pin the computed
 // look onto the clone and its shape before it is shown.
@@ -63,8 +69,10 @@ function makeGhost(src, stage, rect, sr, k) {
     position: 'absolute',
     left: `${(rect.left - sr.left) / k}px`,
     top: `${(rect.top - sr.top) / k}px`,
-    width: `${rect.width / k}px`,
-    height: `${rect.height / k}px`,
+    // layout size, not on-screen size: the element may be mid-scale when
+    // measured, while its contents are laid out at full size
+    width: `${src.offsetWidth}px`,
+    height: `${src.offsetHeight}px`,
     margin: '0',
     transformOrigin: '0 0',
     pointerEvents: 'none',
@@ -82,7 +90,11 @@ function makeGhost(src, stage, rect, sr, k) {
 // steered per frame so the visible rounding blends from one to the other
 // regardless of scale. Positions track the target's live rect, so the
 // flight ends exactly where the target has settled.
-function fly(from, to, uniform, duration) {
+function fly(fromEl, toEl, uniform, duration) {
+  // Fly the visual tile itself (the art), not its wrapper: wrappers can be
+  // laid out at a different size than the fixed-size tile they hold.
+  const from = shape(fromEl)
+  const to = shape(toEl)
   const stage = stageOf(to)
   if (!stage) return
   const sr = stage.getBoundingClientRect()
@@ -90,8 +102,16 @@ function fly(from, to, uniform, duration) {
   const a = from.getBoundingClientRect()
   const b = to.getBoundingClientRect()
   if (!a.width || !b.width) return
+  // base (layout) sizes, read once: the source is often removed from the
+  // page mid-flight, after which it measures 0
+  const base = new Map([
+    [from, [from.offsetWidth, from.offsetHeight]],
+    [to, [to.offsetWidth, to.offsetHeight]],
+  ])
   const rA = radiusOf(from)
   const rB = radiusOf(to)
+  const sA = shadowOf(from)
+  const sB = shadowOf(to)
 
   // Text is the same string at both ends, so it flies as one copy (two
   // cross-fading copies of different widths read as a double image).
@@ -101,8 +121,8 @@ function fly(from, to, uniform, duration) {
   const shA = gA && shape(gA)
   const shB = shape(gB)
   if (gA) gB.style.opacity = '0'
-  from.style.visibility = 'hidden'
-  to.style.visibility = 'hidden'
+  fromEl.style.visibility = 'hidden'
+  toEl.style.visibility = 'hidden'
 
   const t0 = performance.now()
   function step(now) {
@@ -114,28 +134,34 @@ function fly(from, to, uniform, duration) {
     const y = a.top + (c.top - a.top) * e
     const w = a.width + (c.width - a.width) * e
     const h = a.height + (c.height - a.height) * e
-    for (const [g, base] of gA ? [[gA, a], [gB, b]] : [[gB, b]]) {
-      const ky = h / base.height
-      const kx = uniform ? ky : w / base.width // text keeps its proportions
+    for (const [g, src] of gA ? [[gA, from], [gB, to]] : [[gB, to]]) {
+      const [bw, bh] = base.get(src)
+      const ky = h / (bh * k)
+      const kx = uniform ? ky : w / (bw * k) // text keeps its proportions
       g.style.left = `${(x - sr.left) / k}px`
       g.style.top = `${(y - sr.top) / k}px`
       g.style.transform = `scale(${kx}, ${ky})`
-      // visible radius blends rA -> rB; undo this ghost's own scale
-      const r = rA + (rB - rA) * e
-      ;(g === gA ? shA : shB).style.borderRadius = `${r / Math.min(kx, ky)}px`
+      // visible radius and shadow blend source -> target; undo this ghost's
+      // own scale so what you see is the blended value, not a scaled one
+      const ks = Math.min(kx, ky)
+      const sh = g === gA ? shA : shB
+      sh.style.borderRadius = `${(rA + (rB - rA) * e) / ks}px`
+      if (sA && sB) {
+        const v = sA.v.map((n, j) => (n + (sB.v[j] - n) * e) / ks)
+        sh.style.boxShadow = `${sB.c} ${v[0]}px ${v[1]}px ${v[2]}px ${v[3]}px`
+      }
     }
     if (gA) {
-      // the source carries the flight; near the end the two cross-fade so
-      // detail (title text on the art, shadow) changes over, not at the end
+      // the source carries the flight; near the end the destination fades
+      // in over it. The source stays opaque underneath so the art is never
+      // see-through mid cross-fade.
       const x = Math.max(0, Math.min(1, (p - 0.55) / 0.4))
-      const xf = x * x * (3 - 2 * x)
-      gB.style.opacity = String(xf)
-      gA.style.opacity = String(1 - xf)
+      gB.style.opacity = String(x * x * (3 - 2 * x))
     }
     if (p < 1) requestAnimationFrame(step)
     else {
-      to.style.visibility = ''
-      from.style.visibility = ''
+      toEl.style.visibility = ''
+      fromEl.style.visibility = ''
       gA?.remove()
       gB.remove()
     }
