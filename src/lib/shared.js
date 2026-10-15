@@ -1,6 +1,4 @@
 import { useLayoutEffect, useRef } from 'react'
-import { animate } from 'motion'
-import { EASE } from './motion.js'
 
 // Shared elements: when an element with a given id mounts while another
 // with the same id is still on screen (e.g. the preview's album art as Now
@@ -63,15 +61,45 @@ function fly(from, to, uniform, duration) {
   from.style.visibility = 'hidden'
   to.style.visibility = 'hidden'
 
-  const dx = (b.left - a.left) / k
-  const dy = (b.top - a.top) / k
-  animate(
-    ghost,
-    { transform: [`translate(0px, 0px) scale(${sx}, ${sy})`, `translate(${dx}px, ${dy}px) scale(1, 1)`] },
-    { duration, ease: EASE },
-  ).then(() => {
-    to.style.visibility = ''
-    from.style.visibility = ''
-    ghost.remove()
-  })
+  // The target is often still settling (its screen rising, scaling in), so
+  // where it is now is not where it will rest. Each frame the ghost is
+  // steered toward the target's *current* rect, so it lands exactly on it.
+  const sx0 = sx
+  const sy0 = sy
+  const t0 = performance.now()
+  const ease = (x) => {
+    // the signature curve, cubic-bezier(0.16, 1, 0.3, 1), solved for y(x)
+    let lo = 0, hi = 1, t = x
+    for (let i = 0; i < 14; i++) {
+      const cx = 3 * 0.16 * t * (1 - t) ** 2 + 3 * 0.3 * t * t * (1 - t) + t ** 3
+      if (cx < x) lo = t
+      else hi = t
+      t = (lo + hi) / 2
+    }
+    return 3 * 1 * t * (1 - t) ** 2 + 3 * 1 * t * t * (1 - t) + t ** 3
+  }
+  const step = (now) => {
+    const p = Math.min(1, (now - t0) / (duration * 1000))
+    const e = ease(p)
+    const c = to.getBoundingClientRect()
+    const cw = c.width / k
+    const ch = c.height / k
+    // position: from the old spot toward wherever the target is now
+    const x = ((a.left - sr.left) / k) * (1 - e) + ((c.left - sr.left) / k) * e
+    const y = ((a.top - sr.top) / k) * (1 - e) + ((c.top - sr.top) / k) * e
+    // size: from the old size toward the target's current size
+    const gx = (sx0 * (1 - e) + 1 * e) * (cw / w)
+    const gy = (sy0 * (1 - e) + 1 * e) * (ch / h)
+    ghost.style.left = `${x}px`
+    ghost.style.top = `${y}px`
+    ghost.style.transform = `scale(${gx}, ${gy})`
+    if (p < 1) requestAnimationFrame(step)
+    else {
+      to.style.visibility = ''
+      from.style.visibility = ''
+      ghost.remove()
+    }
+  }
+  ghost.style.transform = `scale(${sx0}, ${sy0})`
+  requestAnimationFrame(step)
 }
