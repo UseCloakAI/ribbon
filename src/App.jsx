@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import Sky from './components/Sky.jsx'
+import Backdrop from './components/Backdrop.jsx'
 import Knob from './components/Knob.jsx'
 import Boot from './components/Boot.jsx'
 import StatusBar from './components/StatusBar.jsx'
@@ -147,7 +148,9 @@ export default function App() {
         {/* The frame is the stage's on-screen footprint: the whole display in
             fit mode, a true 4:3 picture with bars around it in 4:3 mode. */}
         <div className="frame" style={{ width: width * scale, height: 768 * scale }}>
-          <Sky mode={mode} />
+          <Sky mode={mode}>
+            <Backdrop active={app?.id === 'nowplaying'} />
+          </Sky>
         </div>
         <div className="stage" style={{ width, transform: `translate(-50%, -50%) scale(${scale})` }}>
           {!booting && (

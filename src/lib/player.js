@@ -26,6 +26,58 @@ function graph() {
 }
 
 let bassAvg = 0
+
+// ---- tempo ----
+// Bass onsets (sudden rises in low-end energy) are timestamped; every
+// second their intervals are folded into 80-160 BPM and voted into a
+// histogram, and the peak becomes the tempo. The latest onset anchors
+// the beat phase so visuals land on the beat, not just at the right rate.
+let prevBass = 0
+let fluxAvg = 0
+let lastOnset = 0
+const onsets = []
+let bpm = 0
+let beatAt = 0
+let lastEstimate = 0
+
+function detectOnset(bass) {
+  const now = performance.now()
+  const flux = Math.max(0, bass - prevBass)
+  prevBass = bass
+  fluxAvg += (flux - fluxAvg) * 0.05
+  if (flux > fluxAvg * 2.2 + 0.015 && now - lastOnset > 260) {
+    lastOnset = now
+    onsets.push(now)
+    while (onsets.length && now - onsets[0] > 12000) onsets.shift()
+  }
+  if (now - lastEstimate > 1000 && onsets.length > 6) {
+    lastEstimate = now
+    const votes = new Float32Array(81) // 80..160
+    for (let i = 0; i < onsets.length; i++)
+      for (let j = i + 1; j < onsets.length && onsets[j] - onsets[i] < 2600; j++) {
+        let b = 60000 / (onsets[j] - onsets[i])
+        while (b < 80) b *= 2
+        while (b > 160) b /= 2
+        for (let d = -2; d <= 2; d++) {
+          const k = Math.round(b) - 80 + d
+          if (k >= 0 && k <= 80) votes[k] += Math.exp(-(d * d) / 2)
+        }
+      }
+    let best = 0
+    for (let k = 1; k <= 80; k++) if (votes[k] > votes[best]) best = k
+    const found = best + 80
+    bpm = bpm ? bpm + (found - bpm) * 0.3 : found
+    beatAt = lastOnset
+  }
+}
+
+// { bpm, phase } where phase runs 0..1 between beats (0 = on the beat)
+export function musicTempo() {
+  if (!bpm || audio.paused) return { bpm: 0, phase: 0 }
+  const period = 60000 / bpm
+  return { bpm: Math.round(bpm), phase: (((performance.now() - beatAt) % period) + period) % period / period }
+}
+
 let beat = 0
 let low = 0
 let high = 0
@@ -54,6 +106,7 @@ export function musicLevel() {
   bass /= 5 * 255
   if (bass > bassAvg * 1.12 && bass > 0.3) beat = Math.min(1, beat + (bass - bassAvg) * 7)
   bassAvg += (bass - bassAvg) * 0.06
+  detectOnset(bass)
   beat *= 0.86
 
   // band energies: lows (bins 1-8, roughly under 700Hz at 44.1k/512)
@@ -154,6 +207,8 @@ function sync() {
   if (!t) return
   if (loaded !== s.track) {
     loaded = s.track
+    bpm = 0
+    onsets.length = 0
     audio.src = t.src
     audio.currentTime = s.position || 0
   } else if (Math.abs(audio.currentTime - s.position) > 2) {

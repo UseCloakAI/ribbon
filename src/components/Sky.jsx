@@ -20,7 +20,7 @@ const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
 const REVEAL = RIBBONS.map((r) => Array.from({ length: r.strands }, () => ({ delay: rand() * 0.45, dur: 0.9 + rand() * 1.0 })))
 const ease = (x) => 1 - Math.pow(1 - x, 3)
 
-export default function Sky({ mode }) {
+export default function Sky({ mode, children }) {
   const canvas = useRef(null)
   const wave = useStore((s) => s.wave)
   const reduced = useReducedMotionPref()
@@ -208,6 +208,7 @@ export default function Sky({ mode }) {
     <div className="sky" aria-hidden="true">
       <div className="sky-layer sky-day" style={{ opacity: mode === 'night' ? 0 : 1 }} />
       <div className="sky-layer sky-night" style={{ opacity: mode === 'night' ? 1 : 0 }} />
+      {children}
       <canvas ref={canvas} className="wave" />
     </div>
   )

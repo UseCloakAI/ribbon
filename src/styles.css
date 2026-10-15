@@ -1489,3 +1489,30 @@ img.track-art {
     opacity: 0.4;
   }
 }
+
+/* ---------- now playing backdrop ---------- */
+.backdrop,
+.backdrop-wash {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.orb {
+  position: absolute;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  will-change: transform;
+}
+.backdrop-veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(240, 248, 255, 0.28);
+}
+.ribbon[data-mode='night'] .backdrop-veil {
+  background: rgba(4, 14, 32, 0.45);
+}
+.np-bpm {
+  font-variant-numeric: tabular-nums;
+}

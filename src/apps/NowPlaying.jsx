@@ -6,7 +6,7 @@ import { bus } from '../lib/bus.js'
 import { clamp, getState, setState, useStore } from '../lib/store.js'
 import { TRACKS, fmtTime } from '../data/media.js'
 import { sfx } from '../lib/sound.js'
-import { seek, setScrubbing } from '../lib/player.js'
+import { musicTempo, seek, setScrubbing } from '../lib/player.js'
 import { EASE_IN } from '../lib/motion.js'
 
 export function AlbumArt({ track, size = 236 }) {
@@ -47,6 +47,11 @@ export default function NowPlaying({ icon }) {
   const [adjust, setAdjust] = useState(null) // null | 'volume' | 'scrub'
   const [scrubT, setScrubT] = useState(0)
   const lastTurn = useRef(0)
+  const [bpm, setBpm] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setBpm(musicTempo().bpm), 1000)
+    return () => clearInterval(id)
+  }, [])
   const [dir, setDir] = useState(1)
   const track = TRACKS[trackIdx]
 
@@ -188,7 +193,7 @@ export default function NowPlaying({ icon }) {
           </div>
           <div className="np-times">
             <span>{fmtTime(shown)}</span>
-            <Bars playing={playing} />
+            <span className="np-bpm">{bpm ? `${bpm} BPM` : <Bars playing={playing} />}</span>
             <span>-{fmtTime(track.length - shown)}</span>
           </div>
         </div>
