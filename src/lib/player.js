@@ -19,26 +19,39 @@ function graph() {
   const src = ctx.createMediaElementSource(audio)
   analyser = ctx.createAnalyser()
   analyser.fftSize = 512
-  analyser.smoothingTimeConstant = 0.85
+  analyser.smoothingTimeConstant = 0.6
   bins = new Uint8Array(analyser.frequencyBinCount)
   src.connect(analyser).connect(ctx.destination)
   graph.ctx = ctx
 }
 
-// 0..1, slow attack and slower release: a calm envelope of the music.
+let bassAvg = 0
+let beat = 0
+
+// Two readings of the song for the wave:
+//   level: loudness envelope, quick to rise, eases back down
+//   beat:  a kick when the bass jumps above its running average, decays fast
 export function musicLevel() {
   if (!analyser || audio.paused) {
-    level *= 0.97
-    return level
+    level *= 0.95
+    beat *= 0.85
+    return { level, beat }
   }
   analyser.getByteFrequencyData(bins)
   let sum = 0
   const n = Math.floor(bins.length * 0.35) // lows and mids carry the feel
   for (let i = 1; i < n; i++) sum += bins[i] * bins[i]
   const rms = Math.sqrt(sum / n) / 255
-  const target = Math.min(1, Math.max(0, (rms - 0.12) / 0.45))
-  level += (target - level) * (target > level ? 0.04 : 0.015)
-  return level
+  const target = Math.min(1, Math.max(0, (rms - 0.08) / 0.4))
+  level += (target - level) * (target > level ? 0.1 : 0.04)
+
+  let bass = 0
+  for (let i = 1; i < 6; i++) bass += bins[i]
+  bass /= 5 * 255
+  if (bass > bassAvg * 1.18 && bass > 0.35) beat = Math.min(1, beat + (bass - bassAvg) * 4)
+  bassAvg += (bass - bassAvg) * 0.06
+  beat *= 0.9
+  return { level, beat }
 }
 
 function tryPlay() {
