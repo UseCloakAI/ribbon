@@ -109,7 +109,8 @@ export default function App() {
         setItems((a) => a.map((v, i) => (i === s.cat ? n : v)))
       }
     } else if (e.type === 'press') {
-      if (s.layer === 'cats') {
+      if (s.layer === 'cats' && CATEGORIES[s.cat].app) launch(CATEGORIES[s.cat].app)
+      else if (s.layer === 'cats') {
         sfx('enter')
         setLayer('items')
       } else launch(list[s.items[s.cat]])
@@ -137,7 +138,6 @@ export default function App() {
   )
 
   const category = CATEGORIES[cat]
-  const item = category.items[items[cat]]
   const AppView = app && !app.fullscreen ? APPS[app.id] : null
   const fullscreen = app?.fullscreen
   const hintContext = booting ? null : app ? 'app' : layer
@@ -206,7 +206,8 @@ function Home({ layer, cat, catDir, turnDir, items, launching, entering }) {
   // the plucks of the arrival sound.
   const catPos = useOrbit(cat, entering ? { from: cat + 1.5, delay: 0.42, active: layer === 'cats' } : { active: layer === 'cats' })
   const category = CATEGORIES[cat]
-  const item = category.items[items[cat]]
+  // a category that is itself an app (CarPlay) previews that app
+  const item = category.app ?? category.items[items[cat]]
 
   // Depth model: launching pushes home back (smaller, fading) while the app
   // lands in front; closing brings home forward again.

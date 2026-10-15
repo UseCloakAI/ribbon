@@ -1,6 +1,6 @@
 import {
   MusicNotes, Books, Playlist,
-  DeviceMobile, DeviceMobileSpeaker, Usb,
+  DeviceMobile,
   Gauge, Path, Speedometer,
   GearSix, SunDim, SpeakerHigh, SlidersHorizontal, Info,
 } from '@phosphor-icons/react'
@@ -20,11 +20,9 @@ export const CATEGORIES = [
     id: 'carplay',
     label: 'CarPlay',
     icon: DeviceMobile,
-    items: [
-      { id: 'carplay', label: 'Launch CarPlay', sub: 'Your iPhone on this screen', icon: DeviceMobile, fullscreen: true },
-      { id: 'phones', label: 'Phones', sub: 'Paired iPhones', icon: DeviceMobileSpeaker },
-      { id: 'dongle', label: 'Adapter', sub: 'USB CarPlay adapter', icon: Usb },
-    ],
+    // no sub-items: pressing the category launches CarPlay straight away
+    items: [],
+    app: { id: 'carplay', label: 'CarPlay', sub: 'Your iPhone on this screen', icon: DeviceMobile, fullscreen: true },
   },
   {
     id: 'drive',

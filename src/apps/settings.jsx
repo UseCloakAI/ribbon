@@ -47,21 +47,6 @@ export function KnobSettings({ icon }) {
   )
 }
 
-export function Adapter({ icon }) {
-  return (
-    <SettingsPanel
-      icon={icon}
-      rows={[
-        { label: 'Status', type: 'info', value: (s) => (s.dongle ? 'Connected' : 'Not found') },
-        { label: 'Adapter', type: 'info', value: 'CPC200-CCPA' },
-        { label: 'Video', type: 'info', value: '1024 × 768, 60 fps' },
-        { label: 'Bridge', type: 'info', value: BRIDGE_KIND === 'adapter' ? 'node-carplay, WebUSB' : 'Demo' },
-        { key: 'dongle', label: 'Simulate adapter', type: 'toggle' },
-      ]}
-    />
-  )
-}
-
 export function About({ icon }) {
   return (
     <SettingsPanel

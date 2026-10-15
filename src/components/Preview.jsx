@@ -8,7 +8,7 @@ import Shared from './Shared.jsx'
 
 // Items that show the same live state share one widget, so moving between
 // them keeps the same elements on screen instead of swapping them.
-const KIND = { nowplaying: 'music', library: 'music', carplay: 'phone', phones: 'phone' }
+const KIND = { nowplaying: 'music', library: 'music' }
 
 function Widget({ id }) {
   const s = useStore((x) => x)
@@ -33,18 +33,10 @@ function Widget({ id }) {
         </div>
       )
     case 'carplay':
-    case 'phones':
       return (
         <div className="pv-big pv-big-sm">
-          <Shared id="phone-name">{PHONES[s.phone]?.name}</Shared>
+          <span>{PHONES[s.phone]?.name}</span>
           <small>{s.dongle ? 'Adapter ready' : 'Adapter not found'}</small>
-        </div>
-      )
-    case 'dongle':
-      return (
-        <div className="pv-big pv-big-sm">
-          <Shared id="set-Status">{s.dongle ? 'Connected' : 'Not found'}</Shared>
-          <small>USB adapter</small>
         </div>
       )
     case 'trip':

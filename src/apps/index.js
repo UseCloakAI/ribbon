@@ -1,15 +1,12 @@
 import NowPlaying from './NowPlaying.jsx'
 import Library from './Library.jsx'
-import Phones from './Phones.jsx'
 import Trip from './Trip.jsx'
 import Gauges from './Gauges.jsx'
-import { Display, Sound, KnobSettings, Adapter, About } from './settings.jsx'
+import { Display, Sound, KnobSettings, About } from './settings.jsx'
 
 export const APPS = {
   nowplaying: NowPlaying,
   library: Library,
-  phones: Phones,
-  dongle: Adapter,
   trip: Trip,
   gauges: Gauges,
   display: Display,
