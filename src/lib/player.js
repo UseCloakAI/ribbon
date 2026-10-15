@@ -18,8 +18,8 @@ function graph() {
   const ctx = new AC()
   const src = ctx.createMediaElementSource(audio)
   analyser = ctx.createAnalyser()
-  analyser.fftSize = 512
-  analyser.smoothingTimeConstant = 0.35
+  analyser.fftSize = 1024
+  analyser.smoothingTimeConstant = 0.7
   bins = new Uint8Array(analyser.frequencyBinCount)
   src.connect(analyser).connect(ctx.destination)
   graph.ctx = ctx
@@ -68,6 +68,33 @@ export function musicLevel() {
   low += (lt - low) * (lt > low ? 0.45 : 0.12)
   high += (ht - high) * (ht > high ? 0.5 : 0.15)
   return { level, beat, low, high }
+}
+
+// A real spectrum laid along the wave. Each ribbon gets a frequency range;
+// its samples run left to right across that range on a log scale (like
+// hearing it), smoothed in time (rise faster than fall) and across
+// neighbours so the line flows instead of jittering.
+const specCache = new Map()
+export function spectrum(key, samples, lo, hi) {
+  let s = specCache.get(key)
+  if (!s) specCache.set(key, (s = new Float32Array(samples + 1)))
+  const live = analyser && !audio.paused
+  for (let i = 0; i <= samples; i++) {
+    let v = 0
+    if (live) {
+      // log-spaced bin for this x, read with linear interpolation
+      const f = lo * Math.pow(hi / lo, i / samples)
+      const b0 = Math.floor(f)
+      const fr = f - b0
+      v = ((bins[b0] ?? 0) * (1 - fr) + (bins[b0 + 1] ?? 0) * fr) / 255
+      v = Math.max(0, (v - 0.18) / 0.82) // ignore the noise floor
+    }
+    s[i] += (v - s[i]) * (v > s[i] ? 0.12 : 0.05)
+  }
+  // spatial smoothing, two light passes
+  for (let pass = 0; pass < 2; pass++)
+    for (let i = 1; i < samples; i++) s[i] = (s[i - 1] + 2 * s[i] + s[i + 1]) / 4
+  return s
 }
 
 function tryPlay() {

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { bus } from '../lib/bus.js'
 import { useStore } from '../lib/store.js'
 import { useReducedMotionPref } from '../lib/hooks.js'
-import { musicLevel } from '../lib/player.js'
+import { musicLevel, spectrum } from '../lib/player.js'
 
 // Each ribbon is a bundle of thin strands whose spread is modulated by a
 // slow sine, so the sheet appears to twist and pinch like the XMB wave.
@@ -79,14 +79,14 @@ export default function Sky({ mode }) {
       // the song breathes into the wave: a little more height and pace when
       // it swells, settling back as it quietens
       const m = speed ? musicLevel() : { level: 0, beat: 0, low: 0, high: 0 }
-      bands[0] += (m.low - bands[0]) * Math.min(1, dt * 18)
-      bands[1] += (m.high - bands[1]) * Math.min(1, dt * 20)
+      bands[0] += (m.low - bands[0]) * Math.min(1, dt * 3)
+      bands[1] += (m.high - bands[1]) * Math.min(1, dt * 3)
       // ease toward the readings so hits swell rather than jump
       music += (m.level - music) * Math.min(1, dt * 6)
-      beat += (m.beat - beat) * Math.min(1, dt * 25)
+      beat += (m.beat - beat) * Math.min(1, dt * 5)
       // each bass hit pushes the wave forward and brightens it
-      energy += beat * dt * 12
-      flash += (beat - flash) * Math.min(1, dt * 20)
+      energy += beat * dt * 2
+      flash += (beat * 0.25 - flash) * Math.min(1, dt * 5)
       energy *= Math.exp(-dt * 2.2)
       push += energy * dt * 1.6
       flash *= Math.exp(-dt * 3)
@@ -114,8 +114,10 @@ export default function Sky({ mode }) {
         // the big wave rides the lows (and the kicks), the small one the mids and highs
         const b = bands[ri]
         const kick = ri === 0 ? beat : 0
-        const lift = 1 + b * 1.8 + kick * 0.9
-        const r = { ...base, a1: base.a1 * lift, a2: base.a2 * lift, width: base.width * (1 + b * 1.2 + kick * 0.7), alpha: Math.min(1, base.alpha * (1 + b * 1.4 + kick * 0.8)) }
+        const lift = 1 + b * 0.35 + kick * 0.15
+        const r = { ...base, a1: base.a1 * lift, a2: base.a2 * lift, width: base.width * (1 + b * 0.25), alpha: Math.min(1, base.alpha * (1 + b * 0.5)) }
+        // lows (≈40-700Hz) shape the big wave, mids and highs (≈700Hz-9kHz) the small one
+        const spec = spectrum(ri, samples, ri === 0 ? 1 : 16, ri === 0 ? 16 : 210)
         for (let i = 0; i <= samples; i++) {
           const nx = i / samples
           const ph = t + push
@@ -123,7 +125,8 @@ export default function Sky({ mode }) {
             H * r.y +
             Math.sin(nx * r.k1 * TAU + ph * r.w1 + r.p) * H * r.a1 +
             Math.sin(nx * r.k2 * TAU - ph * r.w2) * H * r.a2
-          hw[i] = H * r.width * Math.sin(nx * r.kt * TAU + ph * r.wt + r.p) * (0.55 + 0.45 * Math.sin(nx * Math.PI))
+          hw[i] = H * r.width * Math.sin(nx * r.kt * TAU + ph * r.wt + r.p) * (0.55 + 0.45 * Math.sin(nx * Math.PI)) * (1 + spec[i] * 0.9)
+          cy[i] -= spec[i] * H * (ri === 0 ? 0.07 : 0.05) * (0.4 + 0.6 * Math.sin(nx * Math.PI))
         }
 
         // translucent sheet between the outer strands
