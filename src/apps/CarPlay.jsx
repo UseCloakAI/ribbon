@@ -5,7 +5,8 @@ import { useAppKnob } from '../lib/appContext.js'
 import { setState, useStore } from '../lib/store.js'
 import { PHONES } from '../data/media.js'
 import { createBridge, STAGES } from '../carplay/bridge.js'
-import { C } from '../lib/geo.js'
+import { C, KNOB_R } from '../lib/geo.js'
+import { EASE, EASE_IO } from '../lib/motion.js'
 import { sfx } from '../lib/sound.js'
 
 const STEP_LABELS = { adapter: 'USB adapter', phone: 'iPhone', video: 'Video' }
@@ -14,7 +15,8 @@ const ERRORS = {
   'not-wired': ['Adapter bridge not wired yet', 'Connect node-carplay in src/carplay/bridge.js, then press to try again.'],
 }
 
-// Full-screen CarPlay surface. Opens as a circle growing out of the knob.
+// Full-screen CarPlay surface. The circle itself grows until it is the screen,
+// and shrinks back into the circle on the way out.
 export default function CarPlay() {
   const hasAdapter = useStore((s) => s.dongle)
   const phone = PHONES[useStore((s) => s.phone)] ?? PHONES[0]
@@ -84,10 +86,10 @@ export default function CarPlay() {
   return (
     <motion.div
       className="cp"
-      initial={{ clipPath: `circle(0px at ${origin})` }}
-      animate={{ clipPath: `circle(1400px at ${origin})` }}
-      exit={{ clipPath: `circle(0px at ${origin})`, transition: { duration: 0.42, ease: [0.65, 0, 0.35, 1] } }}
-      transition={{ duration: 0.7, ease: [0.65, 0, 0.35, 1] }}
+      initial={{ clipPath: `circle(${KNOB_R}px at ${origin})`, opacity: 0 }}
+      animate={{ clipPath: `circle(1500px at ${origin})`, opacity: 1 }}
+      exit={{ clipPath: `circle(${KNOB_R}px at ${origin})`, opacity: 0, transition: { clipPath: { duration: 0.5, ease: EASE_IO }, opacity: { duration: 0.2, delay: 0.32 } } }}
+      transition={{ clipPath: { duration: 0.8, ease: EASE_IO }, opacity: { duration: 0.15 } }}
     >
       <AnimatePresence mode="wait">
         {error ? (
@@ -182,7 +184,7 @@ export default function CarPlay() {
                   initial={{ opacity: 0, y: -16 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -16 }}
-                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.35, ease: EASE }}
                 >
                   Hold <kbd>esc</kbd> to return to ribbon
                 </motion.div>
@@ -199,5 +201,5 @@ const fade = {
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -12, transition: { duration: 0.18 } },
-  transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+  transition: { duration: 0.45, ease: EASE },
 }

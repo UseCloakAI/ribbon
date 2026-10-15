@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react'
+import { EASE, EASE_IN } from '../lib/motion.js'
 import { useStore } from '../lib/store.js'
 import { PHONES, STATIONS, TRACKS, fmtTime } from '../data/media.js'
 import { AlbumArt, Bars } from '../apps/NowPlaying.jsx'
@@ -94,21 +95,29 @@ function Widget({ id }) {
 
 // The right side only carries live state for the selected item: the song,
 // the frequency, the phone. Names live on the ring, nothing is repeated.
-export default function Preview({ item, launching, entering }) {
+// The right side only carries live state for the selected item: the song,
+// the frequency, the phone. Names live on the ring, nothing is repeated.
+// It moves with the ring: turning down lifts the old state up and away.
+export default function Preview({ item, dir = 1, launching, entering }) {
   return (
     <motion.aside
       className="preview"
-      initial={entering ? { opacity: 0, x: 40 } : false}
-      animate={{ opacity: launching ? 0.4 : 1, x: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: entering ? 0.8 : 0 }}
+      initial={entering ? { opacity: 0, x: 32 } : false}
+      animate={{ opacity: launching ? 0.35 : 1, x: 0 }}
+      transition={{ duration: 0.8, ease: EASE, delay: entering ? 0.85 : 0 }}
     >
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence mode="popLayout" initial={false} custom={dir}>
         <motion.div
           key={item.id}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8, transition: { duration: 0.14, ease: [0.3, 0, 1, 1] } }}
-          transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
+          custom={dir}
+          variants={{
+            enter: (d) => ({ opacity: 0, y: d * 22 }),
+            center: { opacity: 1, y: 0, transition: { duration: 0.45, ease: EASE, delay: 0.05 } },
+            exit: (d) => ({ opacity: 0, y: d * -16, transition: { duration: 0.18, ease: EASE_IN } }),
+          }}
+          initial="enter"
+          animate="center"
+          exit="exit"
         >
           <Widget id={item.id} />
         </motion.div>

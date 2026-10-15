@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { useAppKnob, useReadout } from '../lib/appContext.js'
 import { bus } from '../lib/bus.js'
 import { toast } from '../lib/store.js'
+import { EASE } from '../lib/motion.js'
 
 // Sample data until an OBD-II reader is wired in.
 const INITIAL = [
@@ -62,7 +63,7 @@ export default function Trip({ icon }) {
           initial={{ opacity: 0, x: dir * 40 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: dir * -30, transition: { duration: 0.16 } }}
-          transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.34, ease: EASE }}
         >
           {tiles.map(([label, value, unit], i) => (
             <div key={label} className={`tile ${i === 0 ? 'is-hero' : ''}`}>

@@ -19,6 +19,7 @@ import { useMode, useStage } from './lib/hooks.js'
 import { useStore } from './lib/store.js'
 import { C, R_CAT, R_ITEM, STEP_CAT, STEP_ITEM } from './lib/geo.js'
 import { sfx } from './lib/sound.js'
+import { EASE, EASE_IN, EASE_IO } from './lib/motion.js'
 
 const LAUNCH_MS = 640
 
@@ -35,6 +36,7 @@ export default function App() {
   const [cat, setCat] = useState(DEFAULT_CATEGORY)
   const [items, setItems] = useState(() => CATEGORIES.map(() => 0))
   const [catDir, setCatDir] = useState(1)
+  const [turnDir, setTurnDir] = useState(1)
   const [app, setApp] = useState(null)
   const [launching, setLaunching] = useState(null)
   const [readout, setReadout] = useState(null)
@@ -78,7 +80,7 @@ export default function App() {
   useKnobInput((e) => {
     const s = st.current
     if (s.booting) {
-      if (e.type !== 'turn') bus.emit('boot:skip')
+      bus.emit('boot:key', e)
       return
     }
     if (s.launching) return
@@ -97,10 +99,12 @@ export default function App() {
         const n = s.cat + e.dir
         if (n < 0 || n >= CATEGORIES.length) return bus.emit('bump', e.dir)
         setCatDir(e.dir)
+        setTurnDir(e.dir)
         setCat(n)
       } else {
         const n = s.items[s.cat] + e.dir
         if (n < 0 || n >= list.length) return bus.emit('bump', e.dir)
+        setTurnDir(e.dir)
         setItems((a) => a.map((v, i) => (i === s.cat ? n : v)))
       }
     } else if (e.type === 'press') {
@@ -109,8 +113,10 @@ export default function App() {
         setLayer('items')
       } else launch(list[s.items[s.cat]])
     } else if (e.type === 'back') {
-      if (s.layer === 'items') setLayer('cats')
-      else bus.emit('bump', -1)
+      if (s.layer === 'items') {
+        sfx('back')
+        setLayer('cats')
+      } else bus.emit('bump', -1)
     } else if (e.type === 'home') {
       setLayer('cats')
     }
@@ -155,6 +161,7 @@ export default function App() {
                     layer={layer}
                     cat={cat}
                     catDir={catDir}
+                    turnDir={turnDir}
                     items={items}
                     launching={launching}
                     entering={entering}
@@ -191,33 +198,51 @@ export default function App() {
   )
 }
 
-function Home({ layer, cat, catDir, items, launching, entering }) {
-  const catPos = useOrbit(cat)
+function Home({ layer, cat, catDir, turnDir, items, launching, entering }) {
+  // On arrival the rings start wound back and unfurl around the circle, on
+  // the plucks of the arrival sound.
+  const catPos = useOrbit(cat, entering ? { from: cat + 1.5, delay: 0.42, active: layer === 'cats' } : { active: layer === 'cats' })
   const category = CATEGORIES[cat]
   const item = category.items[items[cat]]
 
-
+  // Depth model: launching pushes home back (smaller, fading) while the app
+  // lands in front; closing brings home forward again.
   return (
     <motion.div
       className="home"
       style={{ transformOrigin: `${C.x}px ${C.y}px` }}
-      initial={entering ? false : { opacity: 0, scale: 0.82 }}
+      initial={entering ? false : { opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.82, transition: { duration: 0.26, ease: [0.3, 0, 1, 1] } }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      exit={{ opacity: 0, scale: 0.92, transition: { duration: 0.3, ease: EASE_IN } }}
+      transition={{ duration: 0.6, ease: EASE, delay: entering ? 0 : 0.1 }}
     >
-      <motion.div
+      <svg
         className="tracks"
-        style={{ left: C.x, top: C.y }}
-        initial={entering ? { opacity: 0, scale: 0.5 } : false}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: entering ? 0.15 : 0 }}
+        style={{ left: C.x - R_ITEM - 2, top: C.y - R_ITEM - 2 }}
+        width={R_ITEM * 2 + 4}
+        height={R_ITEM * 2 + 4}
         aria-hidden="true"
       >
-        <span className={`track-ring ${layer === 'cats' ? 'is-on' : ''}`} style={{ width: R_CAT * 2, height: R_CAT * 2 }} />
-        <span className={`track-ring ${layer === 'items' ? 'is-on' : ''}`} style={{ width: R_ITEM * 2, height: R_ITEM * 2 }} />
-      </motion.div>
-
+        {[
+          ['cats', R_CAT],
+          ['items', R_ITEM],
+        ].map(([id, r]) => (
+          // the active path draws itself from the selection slot
+          <motion.circle
+            key={id}
+            cx={R_ITEM + 2}
+            cy={R_ITEM + 2}
+            r={r}
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={layer === id ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
+            transition={
+              layer === id
+                ? { pathLength: { duration: 1.1, ease: EASE_IO, delay: entering ? 0.4 : 0 }, opacity: { duration: 0.2, delay: entering ? 0.4 : 0 } }
+                : { duration: 0.35, ease: EASE_IN }
+            }
+          />
+        ))}
+      </svg>
 
       <nav className={`orbit orbit-cats ${layer === 'items' ? 'is-parked' : ''}`} style={{ left: C.x, top: C.y }} aria-label="Categories">
         {CATEGORIES.map((c, i) => (
@@ -227,25 +252,35 @@ function Home({ layer, cat, catDir, items, launching, entering }) {
         ))}
       </nav>
 
-      <div className="orbit" style={{ left: C.x, top: C.y }}>
-        <AnimatePresence initial={false} custom={catDir}>
-          <ItemRing key={category.id} category={category} index={items[cat]} layer={layer} entering={entering} dir={catDir} />
+      <div className={`orbit ${launching ? 'is-launching' : ''}`} style={{ left: C.x, top: C.y }}>
+        {/* on arrival the ring's own entrance runs too (it swings in) */}
+        <AnimatePresence initial={entering} custom={catDir}>
+          <ItemRing
+            key={category.id}
+            category={category}
+            index={items[cat]}
+            layer={layer}
+            entering={entering}
+            dir={catDir}
+            launching={launching}
+          />
         </AnimatePresence>
       </div>
 
-      <Preview item={item} launching={launching} entering={entering} />
+      <Preview item={item} dir={turnDir} launching={launching} entering={entering} />
     </motion.div>
   )
 }
 
+// Switching category swings the outer ring the way the knob turned.
 const ringVariants = {
-  enter: (dir) => ({ rotate: dir * 18, opacity: 0 }),
-  center: { rotate: 0, opacity: 1 },
-  exit: (dir) => ({ rotate: dir * -14, opacity: 0, transition: { duration: 0.2, ease: [0.3, 0, 1, 1] } }),
+  enter: (dir) => ({ rotate: dir * 16, opacity: 0 }),
+  center: { rotate: 0, opacity: 1, transition: { rotate: { type: 'spring', stiffness: 160, damping: 22 }, opacity: { duration: 0.3, ease: EASE } } },
+  exit: (dir) => ({ rotate: dir * -12, opacity: 0, transition: { duration: 0.2, ease: EASE_IN } }),
 }
 
-function ItemRing({ category, index, layer, entering, dir }) {
-  const pos = useOrbit(index)
+function ItemRing({ category, index, layer, entering, dir, launching }) {
+  const pos = useOrbit(index, entering ? { from: index + 1.6, delay: 0.72, active: layer === 'items' } : { active: layer === 'items' })
   return (
     <motion.div
       className={`ring ${layer === 'items' ? 'is-live' : ''}`}
@@ -254,12 +289,11 @@ function ItemRing({ category, index, layer, entering, dir }) {
       initial="enter"
       animate="center"
       exit="exit"
-      transition={{ type: 'spring', stiffness: 200, damping: 24 }}
       aria-label={`${category.label} items`}
     >
       {category.items.map((it, i) => (
         <OrbitNode key={it.id} pos={pos} i={i} radius={R_ITEM} step={STEP_ITEM} range={62} className="node node-item">
-          {(focus) => <ItemNode item={it} focus={focus} layer={layer} index={i} entering={entering} />}
+          {(focus) => <ItemNode item={it} focus={focus} index={i} entering={entering} launch={launching === it.id} />}
         </OrbitNode>
       ))}
     </motion.div>

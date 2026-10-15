@@ -1,7 +1,7 @@
 import { motion } from 'motion/react'
 import { clamp } from '../lib/store.js'
+import { CASCADE, EASE, SPRING } from '../lib/motion.js'
 
-const SPRING = { type: 'spring', stiffness: 380, damping: 34 }
 
 // A list the knob scrolls one row per notch. The focus band glides between
 // rows and the list pages only when focus nears an edge.
@@ -10,12 +10,25 @@ export default function KnobList({ items, index, render, rowHeight = 76, visible
   const start = clamp(index - Math.floor(visible / 2) + 1, 0, maxStart)
   return (
     <div className="klist" style={{ height: Math.min(items.length, visible) * rowHeight }}>
-      <motion.div className="klist-track" animate={{ y: -start * rowHeight }} transition={SPRING}>
-        <motion.div className="klist-focus" style={{ height: rowHeight }} animate={{ y: index * rowHeight }} transition={SPRING} />
+      <motion.div className="klist-track" animate={{ y: -start * rowHeight }} transition={SPRING.focus}>
+        <motion.div
+          className="klist-focus"
+          style={{ height: rowHeight }}
+          initial={{ y: index * rowHeight, scaleX: 0.96, opacity: 0 }}
+          animate={{ y: index * rowHeight, scaleX: 1, opacity: 1 }}
+          transition={{ y: SPRING.focus, scaleX: { duration: 0.5, ease: EASE, delay: 0.3 }, opacity: { duration: 0.3, delay: 0.3 } }}
+        />
         {items.map((it, i) => (
-          <div key={keyOf(it, i)} className={`krow ${i === index ? 'is-focus' : ''}`} style={{ height: rowHeight }}>
+          <motion.div
+            key={keyOf(it, i)}
+            className={`krow ${i === index ? 'is-focus' : ''}`}
+            style={{ height: rowHeight }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: EASE, delay: 0.26 + Math.min(i, 8) * CASCADE }}
+          >
             {render(it, i, i === index)}
-          </div>
+          </motion.div>
         ))}
       </motion.div>
     </div>

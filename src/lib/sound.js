@@ -416,6 +416,14 @@ function queueDefault(name, arg) {
   })
 }
 
+// True when the browser is holding audio until a gesture. Kiosk mode (see
+// scripts/kiosk.sh) never is; a normal browser tab usually is on first load.
+export function audioLocked() {
+  if (!getState().sounds) return false
+  const a = init()
+  return !!a && a.state !== 'running'
+}
+
 let wired = false
 export function wireSound() {
   if (wired) return

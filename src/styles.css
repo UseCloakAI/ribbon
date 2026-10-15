@@ -23,7 +23,7 @@
   --shadow: 0 14px 30px -18px rgba(18, 78, 138, 0.4);
   --disc: rgba(255, 255, 255, 0.5);
   --disc-edge: rgba(255, 255, 255, 0.75);
-  --acc: #f0662a;
+  --acc: #1a62d6;
 }
 
 .ribbon[data-mode='night'] {
@@ -39,7 +39,7 @@
   --shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.6);
   --disc: rgba(150, 200, 250, 0.08);
   --disc-edge: rgba(190, 225, 255, 0.16);
-  --acc: #ff8650;
+  --acc: #6cb6ff;
 }
 
 * {
@@ -245,24 +245,20 @@ kbd {
 }
 
 /* ---------- orbits ---------- */
-.tracks,
 .orbit {
   position: absolute;
   width: 0;
   height: 0;
 }
-.track-ring {
+.tracks {
   position: absolute;
-  left: 0;
-  top: 0;
-  translate: -50% -50%;
-  border-radius: 50%;
-  border: 1px solid var(--track);
-  opacity: 0;
-  transition: opacity 0.45s var(--out);
+  overflow: visible;
+  pointer-events: none;
 }
-.track-ring.is-on {
-  opacity: 1;
+.tracks circle {
+  fill: none;
+  stroke: var(--track);
+  stroke-width: 1;
 }
 .ring {
   position: absolute;
@@ -316,10 +312,18 @@ kbd {
   translate: -22px -50%;
 }
 .item-row {
+  transform-origin: 22px 50%;
+}
+.item-inner {
   display: flex;
   align-items: center;
   gap: 14px;
   transform-origin: 22px 50%;
+  transition: opacity 0.3s var(--in);
+}
+/* staging: while one item launches, the rest step back */
+.orbit.is-launching .item:not(.is-launch) .item-inner {
+  opacity: 0.18;
 }
 .ring:not(.is-live) .item-row {
   opacity: 0.5 !important;
@@ -1114,6 +1118,7 @@ kbd {
 
 /* ---------- carplay ---------- */
 .cp {
+  --acc: #4d9dff;
   position: absolute;
   inset: 0;
   z-index: 20;
@@ -1192,7 +1197,7 @@ kbd {
   margin-left: 16px;
 }
 .cp-error-icon {
-  color: #ff8650;
+  color: var(--acc);
   margin-bottom: 18px;
 }
 .cp-steps {
@@ -1227,8 +1232,8 @@ kbd {
   transition: background 0.3s, border-color 0.3s;
 }
 .cp-step.is-done .cp-step-mark {
-  background: #ff8650;
-  border-color: #ff8650;
+  background: var(--acc);
+  border-color: var(--acc);
   color: #fff;
 }
 .cp-step-mark > span {
@@ -1238,7 +1243,7 @@ kbd {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #ff8650;
+  background: var(--acc);
   animation: cp-orb 0.8s ease-in-out infinite alternate;
 }
 @keyframes cp-orb {
@@ -1328,10 +1333,38 @@ kbd {
   z-index: 40;
   pointer-events: none;
 }
+/* night that opens from the horizon outward as --r grows */
 .boot-dark {
+  --r: 0%;
   position: absolute;
   inset: 0;
   background: radial-gradient(80% 60% at 50% 60%, #0d2849, #030812);
+  -webkit-mask-image: radial-gradient(120% 95% at 50% 59%, transparent calc(var(--r) - 45%), #000 var(--r));
+  mask-image: radial-gradient(120% 95% at 50% 59%, transparent calc(var(--r) - 45%), #000 var(--r));
+}
+.boot-point {
+  position: absolute;
+  left: 50%;
+  top: 59%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: #f4f9ff;
+  box-shadow:
+    0 0 18px 6px rgba(170, 215, 255, 0.55),
+    0 0 70px 26px rgba(110, 175, 255, 0.22);
+}
+.boot-standby {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(59% + 34px);
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(220, 236, 255, 0.62);
 }
 .boot-thread {
   position: absolute;
@@ -1339,12 +1372,41 @@ kbd {
   top: 46%;
   width: 100%;
   height: 26%;
+  transform-origin: 50% 50%;
+}
+.boot-thread svg {
+  width: 100%;
+  height: 100%;
 }
 .boot-thread path {
   fill: none;
-  stroke: rgba(225, 240, 255, 0.95);
-  stroke-width: 2;
+  stroke: rgba(232, 243, 255, 0.95);
+  stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
+}
+.boot-thread path.boot-thread-bloom {
+  stroke: rgba(150, 205, 255, 0.3);
+  stroke-width: 8;
+}
+.boot-glint {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+}
+.boot-glint::before,
+.boot-glint::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  margin-left: -0.75px;
+  background: linear-gradient(transparent, #fff 50%, transparent);
+}
+.boot-glint::after {
+  rotate: 90deg;
 }
 .boot-center {
   position: absolute;
@@ -1353,14 +1415,25 @@ kbd {
   place-content: center;
   justify-items: center;
 }
+.boot-lockup {
+  display: grid;
+  justify-items: center;
+}
 .boot-word {
+  display: flex;
   font-size: clamp(64px, 14vh, 128px);
-  font-weight: 650;
-  letter-spacing: -0.06em;
+  font-weight: 600;
   line-height: 1.1;
   color: var(--ink);
 }
-.boot-word span {
+/* each letter rises out of its own window, as if from behind the horizon */
+.boot-mask {
+  display: inline-block;
+  overflow: hidden;
+  padding: 0 0.02em 0.14em;
+  margin: 0 -0.0475em -0.14em;
+}
+.boot-mask > span {
   display: inline-block;
 }
 .boot-load {
@@ -1371,21 +1444,21 @@ kbd {
 }
 .boot-line {
   width: 180px;
-  height: 3px;
-  border-radius: 2px;
+  height: 2px;
+  border-radius: 1px;
   overflow: hidden;
   background: var(--line);
 }
 .boot-line span {
   display: block;
   height: 100%;
-  background: var(--ink);
+  background: var(--acc);
   transform-origin: 0 50%;
 }
 .boot-step {
   height: 18px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink-2);
 }
 

@@ -1,5 +1,6 @@
 import { motion } from 'motion/react'
 import { useClock } from '../lib/hooks.js'
+import { EASE } from '../lib/motion.js'
 
 const fmt = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
 
@@ -10,9 +11,9 @@ export default function StatusBar({ entering }) {
   return (
     <motion.header
       className="status"
-      initial={entering ? { opacity: 0, y: -24 } : false}
+      initial={entering ? { opacity: 0, y: -12 } : false}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: entering ? 0.2 : 0 }}
+      transition={{ duration: 0.8, ease: EASE, delay: entering ? 0.95 : 0 }}
     >
       <div className="status-right">
         <div className="clock">

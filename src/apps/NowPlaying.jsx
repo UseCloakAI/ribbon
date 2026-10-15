@@ -6,6 +6,7 @@ import { bus } from '../lib/bus.js'
 import { clamp, getState, setState, useStore } from '../lib/store.js'
 import { TRACKS, fmtTime } from '../data/media.js'
 import { sfx } from '../lib/sound.js'
+import { EASE_IN } from '../lib/motion.js'
 
 export function AlbumArt({ track, size = 236 }) {
   const h = track.hue
@@ -104,7 +105,7 @@ export default function NowPlaying({ icon }) {
             custom={dir}
             initial={{ opacity: 0, x: dir * 60, rotate: dir * 4, scale: 0.94 }}
             animate={{ opacity: 1, x: 0, rotate: 0, scale: playing ? 1 : 0.95 }}
-            exit={{ opacity: 0, x: dir * -60, rotate: dir * -4, scale: 0.94, transition: { duration: 0.2, ease: [0.3, 0, 1, 1] } }}
+            exit={{ opacity: 0, x: dir * -60, rotate: dir * -4, scale: 0.94, transition: { duration: 0.2, ease: EASE_IN } }}
             transition={{ type: 'spring', stiffness: 220, damping: 24 }}
           >
             <AlbumArt track={track} />

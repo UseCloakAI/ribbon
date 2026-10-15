@@ -31,7 +31,7 @@ Two rings orbit the knob: categories on the inner ring, their items on the outer
 
 ## What's in the prototype
 
-- **Startup**: a thread of light draws across the dark, the sky comes up and the thread becomes the wave, wordmark rises, short load, hand-off to the knob as the orbits fan out.
+- **Startup**, scored to the startup sound: a point of light gathers itself and stretches into a thread, dawn opens outward from the thread as it bends into the wave, glints land on the bell notes, the wordmark rises letter by letter out of the horizon on the chime, a short load, then the word lifts away and the circle springs in from the edge, sends a ring off itself, the categories unfurl around it on the arrival plucks, the items swing in, the active path draws itself and the clock arrives last. If the browser is holding audio, a breathing point of light waits on a dark screen until the first key, so the startup always plays with its sound.
 - **Launcher**: the circle stays still while the options flow around it. Selection is the item in the 3 o'clock slot, full ink and slightly larger. Press makes the circle breathe, ring ends rubber-band, the rim fills as the launch loader, and the circle shows a value only while you're adjusting one. The right side shows only live state (the song, the frequency, the phone). Key hints fade after a few seconds. Wave surges with each turn.
 - **Music**: Now Playing (controls + grabbed volume), Radio (0.1 MHz per notch, presets), Library (loading skeleton, then list).
 - **CarPlay**: Launch CarPlay (full screen, opens out of the knob, connection stages, error + retry), Phones, Adapter.
@@ -40,13 +40,22 @@ Two rings orbit the knob: categories on the inner ring, their items on the outer
 
 Trip, gauge and library data are samples.
 
+## Motion
+
+One identity across the app (`src/lib/motion.js`): premium and calm. A signature decelerating curve for things arriving, its accelerating twin for things leaving, an in-out for things travelling between two spots, three durations, and springs damped to a few percent of overshoot. Highlights:
+
+- Rings spin on a spring with a trace of overshoot; nodes trail a few degrees when the ring moves fast and catch up as it settles; ring ends rubber-band.
+- Switching category swings the outer ring the way the knob turned; items cascade in; the live preview slides the same way.
+- Launching: the loader fills the circle's rim, the chosen item inhales then swells while the others step back, and its name flies on an arc off the ring into the app title as home recedes and the body rises in. Closing runs the arc back.
+- CarPlay: the circle itself grows until it is the screen, and shrinks back into the circle on exit.
+
 ## Sound
 
 All sound is synthesized (`src/lib/sound.js`), then pre-rendered once at startup through an `OfflineAudioContext` into stereo buffers, so playback is a single buffer per sound and costs almost nothing on a Pi. Voices are two-operator FM (glass bells, kalimba plucks), shaped noise, and a detuned saw pad, all through a stereo convolution room with early reflections and a damped tail. Each sound is peak-normalized to its own target, so the knob's constant companions sit quietest and the moments sit fullest.
 
 The palette lives in G major pentatonic. Navigation is close and dry: a glass tick per notch, a felt thock at a ring's end, a rising fifth to step in, falling to step out. Values you grab play a pluck pitched onto the scale by the value, so any sweep sounds musical; radio tuning breathes static between stations and rings when you land on one. Moments open into the room: startup (a Gmaj9 pad swelling with the sky, a chime as the wordmark lands, a low tone as the circle arrives), app launch (air rising while the rim fills, then a glass chord), CarPlay connecting. Interface sounds and their volume live in Settings › Sound.
 
-Browsers block audio until the first key press, so the startup sound only plays on a fresh load in kiosk mode (`scripts/kiosk.sh` passes `--autoplay-policy=no-user-gesture-required`). In dev, `__sfx('launch')` in the console plays any sound.
+Browsers block audio until the first key press. In kiosk mode (`scripts/kiosk.sh` passes `--autoplay-policy=no-user-gesture-required`) the startup plays straight away; in a normal browser tab ribbon waits on a standby screen and the first key starts the intro with sound. In dev, `__sfx('launch')` in the console plays any sound.
 
 ## CarPlay
 

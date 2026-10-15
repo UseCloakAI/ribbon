@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { useStore } from '../lib/store.js'
+import { EASE } from '../lib/motion.js'
 
 const SETS = {
   cats: [['← →', 'turn'], ['enter', 'open'], ['esc', 'back']],
@@ -29,7 +30,7 @@ export default function Hints({ context }) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12 }}
-          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.3, ease: EASE }}
         >
           <AnimatePresence mode="popLayout" initial={false}>
             {set.map(([k, label]) => (
